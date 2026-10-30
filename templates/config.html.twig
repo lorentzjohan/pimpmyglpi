@@ -39,6 +39,31 @@
     {% endif %}
 {% endmacro %}
 
+{% macro dropzone(name, input_id, accept, formats, max_size, background, current_url = null, default_url = null, label = '') %}
+    <div class="pimpmyglpi-dropzone pimpmyglpi-bg-{{ background }}" data-formats="{{ formats }}" data-max-size="{{ max_size }}">
+        <input type="file" class="pimpmyglpi-file" id="{{ input_id }}" name="{{ name }}" accept="{{ accept }}" {% if label is not empty %}aria-label="{{ label }}"{% endif %} />
+        <label class="pimpmyglpi-drop-target" for="{{ input_id }}">
+            <span class="pimpmyglpi-drop-preview">
+                {% if current_url is not empty %}
+                    <img src="{{ current_url }}" alt="" />
+                {% elseif default_url is not empty %}
+                    <img src="{{ default_url }}" alt="" class="pimpmyglpi-default" />
+                {% endif %}
+            </span>
+            <span class="pimpmyglpi-drop-hint">
+                <i class="ti ti-upload" aria-hidden="true"></i>
+                {{ __('Drop an image here or click to browse', 'pimpmyglpi') }}
+            </span>
+        </label>
+        <div class="pimpmyglpi-drop-selection d-none">
+            <i class="ti ti-file-check text-success" aria-hidden="true"></i>
+            <span class="pimpmyglpi-drop-name"></span>
+            <button type="button" class="btn btn-sm btn-link p-0 ms-auto pimpmyglpi-drop-clear">{{ __('Cancel', 'pimpmyglpi') }}</button>
+        </div>
+        <div class="pimpmyglpi-drop-error small text-danger d-none" role="alert"></div>
+    </div>
+{% endmacro %}
+
 {% macro colorSetting(name, value, default, label, helper = '') %}
     <div class="form-field row align-items-center col-12 glpi-full-width mb-2">
         <label class="col-form-label col-xxl-5 text-xxl-end" for="{{ name }}_input">{{ label }}</label>
@@ -59,10 +84,29 @@
         background-color: #fff; background-image: linear-gradient(45deg, #eef1f5 25%, transparent 25%), linear-gradient(-45deg, #eef1f5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eef1f5 75%), linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
         background-size: 14px 14px; background-position: 0 0, 0 7px, 7px -7px, -7px 0; }
     .pimpmyglpi-preview-dark { background: #2f3f64; }
+    .pimpmyglpi-dropzone { position: relative; }
+    .pimpmyglpi-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+    .pimpmyglpi-drop-target { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 120px; padding: 12px; margin: 0;
+        border: 2px dashed var(--tblr-border-color); border-radius: 8px; cursor: pointer; text-align: center; transition: border-color .15s, box-shadow .15s; }
+    .pimpmyglpi-drop-target:hover, .pimpmyglpi-dropzone:focus-within .pimpmyglpi-drop-target { border-color: var(--tblr-primary); }
+    .pimpmyglpi-dropzone.is-dragover .pimpmyglpi-drop-target { border-color: var(--tblr-primary); box-shadow: 0 0 0 4px rgba(var(--tblr-primary-rgb), .25); }
+    .pimpmyglpi-dropzone.has-file .pimpmyglpi-drop-target { border-style: solid; border-color: var(--tblr-success, #2fb344); }
+    .pimpmyglpi-drop-preview { display: flex; align-items: center; justify-content: center; min-height: 64px; }
+    .pimpmyglpi-drop-preview img { max-height: 64px; max-width: 100%; }
+    .pimpmyglpi-drop-preview img.pimpmyglpi-default { opacity: .45; }
+    .pimpmyglpi-drop-hint { font-size: .8rem; }
+    .pimpmyglpi-bg-dark .pimpmyglpi-drop-target { background: #2f3f64; color: #e2e8f0; }
+    .pimpmyglpi-bg-light .pimpmyglpi-drop-target { background: #fff; color: #475569; }
+    .pimpmyglpi-bg-checker .pimpmyglpi-drop-target { color: #475569; background-color: #fff;
+        background-image: linear-gradient(45deg, #eef1f5 25%, transparent 25%), linear-gradient(-45deg, #eef1f5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eef1f5 75%), linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
+        background-size: 14px 14px; background-position: 0 0, 0 7px, 7px -7px, -7px 0; }
+    .pimpmyglpi-drop-selection { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: .8rem; }
     .pimpmyglpi-preview img { max-height: 60px; max-width: 100%; }
     .pimpmyglpi-examples img { max-height: 48px; max-width: 140px; }
 </style>
-<div class="container-xl">
+<div class="container-xl" data-pimpmyglpi-config
+     data-msg-type="{{ __('Unsupported file type. Accepted formats: %s.', 'pimpmyglpi') }}"
+     data-msg-size="{{ __('The file is too large: %s at most.', 'pimpmyglpi') }}">
     <form name="pimpmyglpi_config" action="{{ form_url }}" method="post" enctype="multipart/form-data" data-track-changes="true">
         {{ _self.csrf(csrf_token) }}
 
@@ -81,38 +125,54 @@
                     {{ fields.smallTitle(__('Images', 'pimpmyglpi')) }}
                     <div class="col-12 mb-3">
                         <div class="row g-3">
-                            {% for item in global_slots %}
-                                <div class="col-md-6 col-xxl-4">
+                            {% for group in image_groups %}
+                                <div class="col-12 col-xl-6">
                                     <div class="card h-100">
-                                        <div class="card-body d-flex flex-column">
+                                        <div class="card-body">
                                             <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
-                                                <h4 class="mb-1">{{ item.label }}</h4>
-                                                <span class="badge bg-secondary-lt">{{ item.formats }}</span>
+                                                <h4 class="mb-1">{{ group.label }}</h4>
+                                                <span class="badge bg-secondary-lt">{{ group.variants[0].formats }}</span>
                                             </div>
-                                            <div class="text-muted small mb-2">{{ item.help }}</div>
-                                            {% set preview_dark = item.image is not null and item.image.tone is not empty ? item.image.tone == 'light' : item.dark %}
-                                            <div class="pimpmyglpi-preview {{ preview_dark ? 'pimpmyglpi-preview-dark' : '' }} mb-2">
-                                                {% if item.image is not null %}
-                                                    <img src="{{ item.image.url }}" alt="" />
-                                                {% elseif item.default is not null %}
-                                                    <img src="{{ base_path ~ item.default }}" alt="" class="opacity-75" />
-                                                {% else %}
-                                                    <span class="small text-muted">{{ __('None', 'pimpmyglpi') }}</span>
-                                                {% endif %}
+                                            <div class="text-muted small mb-2">{{ group.help }}</div>
+                                            <div class="row g-2">
+                                                {% for variant in group.variants %}
+                                                    <div class="{{ group.variants|length > 1 ? 'col-sm-6' : 'col-12' }}">
+                                                        {% if variant.label is not empty %}
+                                                            <div class="fw-bold small">{{ variant.label }}</div>
+                                                            <div class="text-muted small mb-1">{{ variant.note }}</div>
+                                                        {% endif %}
+                                                        {{ _self.dropzone(
+                                                            variant.slot, 'file_' ~ variant.slot, variant.accept, variant.formats, variant.max_size,
+                                                            variant.background,
+                                                            variant.image is not null ? variant.image.url : null,
+                                                            variant.default is not null ? base_path ~ variant.default : null,
+                                                            group.label ~ (variant.label is not empty ? ' - ' ~ variant.label : '')
+                                                        ) }}
+                                                        <div class="small mt-1">
+                                                            {% if variant.image is not null %}
+                                                                <span class="badge bg-green-lt">{{ __('Custom', 'pimpmyglpi') }}</span>
+                                                                <span class="text-muted ms-1">{{ variant.image.ext }}{% if variant.image.width > 0 %} · {{ variant.image.width }} × {{ variant.image.height }} px{% endif %}</span>
+                                                                <label class="form-check mt-1 mb-0">
+                                                                    <input class="form-check-input" type="checkbox" name="delete[]" value="{{ variant.slot }}" />
+                                                                    <span class="form-check-label">{{ __('Remove (back to GLPI default)', 'pimpmyglpi') }}</span>
+                                                                </label>
+                                                            {% elseif variant.default is not null %}
+                                                                <span class="badge bg-secondary-lt">{{ __('GLPI default', 'pimpmyglpi') }}</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
                                             </div>
-                                            <div class="small mb-2">
-                                                {% if item.image is not null %}
-                                                    <span class="badge bg-green-lt">{{ __('Custom', 'pimpmyglpi') }}</span>
-                                                    <span class="text-muted ms-1">{{ item.image.ext }}{% if item.image.width > 0 %} · {{ item.image.width }} × {{ item.image.height }} px{% endif %}</span>
-                                                    <label class="form-check mt-1 mb-0">
-                                                        <input class="form-check-input" type="checkbox" name="delete[]" value="{{ item.slot }}" />
-                                                        <span class="form-check-label">{{ __('Remove (back to GLPI default)', 'pimpmyglpi') }}</span>
-                                                    </label>
-                                                {% else %}
-                                                    <span class="badge bg-secondary-lt">{{ __('GLPI default', 'pimpmyglpi') }}</span>
-                                                {% endif %}
-                                            </div>
-                                            <input type="file" class="form-control form-control-sm mt-auto" id="file_{{ item.slot }}" name="{{ item.slot }}" accept="{{ item.accept }}" aria-label="{{ item.label }}" />
+                                            {% if group.key == 'login' and messages.login is defined %}
+                                                <div class="alert alert-info small mt-3 mb-0" role="status">
+                                                    <i class="ti ti-info-circle me-1" aria-hidden="true"></i>{{ messages.login }}
+                                                </div>
+                                            {% endif %}
+                                            {% if group.key in ['menu', 'menu_reduced'] and messages.menu is defined %}
+                                                <div class="alert alert-warning small mt-3 mb-0" role="alert">
+                                                    <i class="ti ti-alert-triangle me-1" aria-hidden="true"></i>{{ messages.menu }}
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -135,8 +195,8 @@
                         <div class="row g-3">
                             {% for logo in palette_logos %}
                                 <div class="col-md-4">
-                                    <label class="form-label" for="file_palette_{{ logo }}">{{ logo_labels[logo] }}</label>
-                                    <input type="file" class="form-control form-control-sm" id="file_palette_{{ logo }}" name="palette_{{ logo }}" accept="{{ logo_accept }}" />
+                                    <div class="fw-bold small mb-1">{{ logo_labels[logo] }}</div>
+                                    {{ _self.dropzone('palette_' ~ logo, 'file_palette_' ~ logo, logo_accept, logo_formats, logo_max_size, 'checker', null, null, logo_labels[logo]) }}
                                 </div>
                             {% endfor %}
                         </div>
@@ -242,4 +302,5 @@
         </div>
     </div>
 </div>
+<script src="{{ base_path }}/plugins/pimpmyglpi/js/config.js?v={{ plugin_version|url_encode }}"></script>
 {% endblock %}

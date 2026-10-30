@@ -3,7 +3,7 @@
 # This file is distributed under the GNU General Public License v3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: pimpmyglpi 1.0.0\n"
+"Project-Id-Version: pimpmyglpi 1.1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-10-29 00:00+0000\n"
 "Last-Translator: LORENTZ Johan\n"
@@ -13,6 +13,26 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "The main menu color is light: add the logos for light menus, the logos for dark menus may not be readable."
+msgstr "La couleur du menu principal est claire : ajoutez les logos pour menu clair, les logos pour menu foncé risquent d'être illisibles."
+
+msgid "background image"
+msgstr "image de fond"
+
+msgid "background color"
+msgstr "couleur de fond"
+
+#, php-format
+msgid "The login page background is dark (%s): the logo for a dark background is used."
+msgstr "Le fond de la page de connexion est foncé (%s) : le logo pour fond foncé est utilisé."
+
+#, php-format
+msgid "The login page background is light (%s): the logo for a light background is used."
+msgstr "Le fond de la page de connexion est clair (%s) : le logo pour fond clair est utilisé."
+
+msgid "The login page keeps the GLPI background: light palettes use the logo for a light background, dark palettes the logo for a dark background."
+msgstr "La page de connexion garde le fond de GLPI : les palettes claires utilisent le logo pour fond clair, les palettes sombres le logo pour fond foncé."
 
 msgid "Unknown palette."
 msgstr "Palette inconnue."
@@ -49,41 +69,59 @@ msgstr "Apparence de GLPI restaurée."
 msgid "The changes could not be saved: check that GLPI can write in its files directory."
 msgstr "Les modifications n'ont pas pu être enregistrées : vérifiez que GLPI peut écrire dans son dossier files."
 
+msgid "Dark menu"
+msgstr "Menu foncé"
+
+msgid "Light logo. GLPI menus are dark: used by default."
+msgstr "Logo clair. Les menus de GLPI sont foncés : utilisé par défaut."
+
+msgid "Light menu"
+msgstr "Menu clair"
+
+msgid "Dark logo. Used when the main menu color is light."
+msgstr "Logo foncé. Utilisé quand la couleur du menu principal est claire."
+
 msgid "Favicon"
 msgstr "Favicon"
 
-msgid "Icon of the browser tab. Square, 32 × 32 px or more."
-msgstr "Icône de l'onglet du navigateur. Carrée, 32 × 32 px ou plus."
+msgid "Icon of the browser tab. Square, 32 × 32 px or more (a multi-size ICO is best)."
+msgstr "Icône de l'onglet du navigateur. Carrée, 32 × 32 px ou plus (idéalement un ICO multi-tailles)."
 
 msgid "Main menu logo"
 msgstr "Logo du menu principal"
 
-msgid "GLPI format: 100 × 55 px (250 × 138 px for sharp screens). Light logo, the menu is dark."
-msgstr "Format GLPI : 100 × 55 px (250 × 138 px pour les écrans haute définition). Logo clair, le menu est foncé."
+msgid "GLPI format: 100 × 55 px, or 250 × 138 px and more for sharp screens."
+msgstr "Format GLPI : 100 × 55 px, ou 250 × 138 px et plus pour les écrans haute définition."
 
 msgid "Collapsed menu logo"
 msgstr "Logo du menu replié"
 
-msgid "Shown when the menu is collapsed. Square, GLPI format: 53 × 53 px."
-msgstr "Affiché quand le menu est replié. Carré, format GLPI : 53 × 53 px."
+msgid "Square. GLPI format: 53 × 53 px, or 159 × 159 px and more for sharp screens."
+msgstr "Carré. Format GLPI : 53 × 53 px, ou 159 × 159 px et plus pour les écrans haute définition."
 
 msgid "Login page logo"
 msgstr "Logo de la page de connexion"
 
-msgid "GLPI format: 250 × 138 px. Dark logo for light palettes, or a light logo on a dark background image."
-msgstr "Format GLPI : 250 × 138 px. Logo foncé pour les palettes claires, ou logo clair sur une image de fond sombre."
+msgid "GLPI format: 250 × 138 px, or 750 × 414 px and more for sharp screens."
+msgstr "Format GLPI : 250 × 138 px, ou 750 × 414 px et plus pour les écrans haute définition."
 
-msgid "Login page logo (dark palettes)"
-msgstr "Logo de la page de connexion (palettes sombres)"
+msgid "Light background"
+msgstr "Fond clair"
 
-msgid "Used when the default palette is dark. Light logo, 250 × 138 px. Falls back to the logo above."
-msgstr "Utilisé quand la palette par défaut est sombre. Logo clair, 250 × 138 px. À défaut, le logo ci-dessus est utilisé."
+msgid "Dark logo."
+msgstr "Logo foncé."
+
+msgid "Dark background"
+msgstr "Fond foncé"
+
+msgid "Light logo."
+msgstr "Logo clair."
 
 msgid "Login page background"
 msgstr "Fond de la page de connexion"
 
-msgid "Covers the whole page. 1920 × 1080 px recommended."
-msgstr "Couvre toute la page. 1920 × 1080 px recommandé."
+msgid "Covers the whole page. 1920 × 1080 px recommended. Its brightness picks the login page logo."
+msgstr "Couvre toute la page. 1920 × 1080 px recommandé. Sa luminosité détermine le logo de la page de connexion."
 
 msgid "GLPI default"
 msgstr "Par défaut de GLPI"
@@ -139,6 +177,12 @@ msgstr "L'image est trop grande : %d px au maximum par côté."
 msgid "Remove (back to GLPI default)"
 msgstr "Supprimer (retour à l'image de GLPI)"
 
+msgid "Drop an image here or click to browse"
+msgstr "Déposez une image ici ou cliquez pour parcourir"
+
+msgid "Cancel"
+msgstr "Annuler"
+
 msgid "Identity"
 msgstr "Identité"
 
@@ -150,9 +194,6 @@ msgstr "Remplace « GLPI » dans le titre de l'onglet du navigateur, le libellé
 
 msgid "Images"
 msgstr "Images"
-
-msgid "None"
-msgstr "Aucune"
 
 msgid "Custom"
 msgstr "Personnalisé"

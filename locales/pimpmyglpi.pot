@@ -3,7 +3,7 @@
 # This file is distributed under the GNU General Public License v3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: pimpmyglpi 1.0.0\n"
+"Project-Id-Version: pimpmyglpi 1.1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-10-29 00:00+0000\n"
 "Last-Translator: LORENTZ Johan\n"
@@ -13,6 +13,26 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+msgid "The main menu color is light: add the logos for light menus, the logos for dark menus may not be readable."
+msgstr ""
+
+msgid "background image"
+msgstr ""
+
+msgid "background color"
+msgstr ""
+
+#, php-format
+msgid "The login page background is dark (%s): the logo for a dark background is used."
+msgstr ""
+
+#, php-format
+msgid "The login page background is light (%s): the logo for a light background is used."
+msgstr ""
+
+msgid "The login page keeps the GLPI background: light palettes use the logo for a light background, dark palettes the logo for a dark background."
+msgstr ""
 
 msgid "Unknown palette."
 msgstr ""
@@ -49,40 +69,58 @@ msgstr ""
 msgid "The changes could not be saved: check that GLPI can write in its files directory."
 msgstr ""
 
+msgid "Dark menu"
+msgstr ""
+
+msgid "Light logo. GLPI menus are dark: used by default."
+msgstr ""
+
+msgid "Light menu"
+msgstr ""
+
+msgid "Dark logo. Used when the main menu color is light."
+msgstr ""
+
 msgid "Favicon"
 msgstr ""
 
-msgid "Icon of the browser tab. Square, 32 × 32 px or more."
+msgid "Icon of the browser tab. Square, 32 × 32 px or more (a multi-size ICO is best)."
 msgstr ""
 
 msgid "Main menu logo"
 msgstr ""
 
-msgid "GLPI format: 100 × 55 px (250 × 138 px for sharp screens). Light logo, the menu is dark."
+msgid "GLPI format: 100 × 55 px, or 250 × 138 px and more for sharp screens."
 msgstr ""
 
 msgid "Collapsed menu logo"
 msgstr ""
 
-msgid "Shown when the menu is collapsed. Square, GLPI format: 53 × 53 px."
+msgid "Square. GLPI format: 53 × 53 px, or 159 × 159 px and more for sharp screens."
 msgstr ""
 
 msgid "Login page logo"
 msgstr ""
 
-msgid "GLPI format: 250 × 138 px. Dark logo for light palettes, or a light logo on a dark background image."
+msgid "GLPI format: 250 × 138 px, or 750 × 414 px and more for sharp screens."
 msgstr ""
 
-msgid "Login page logo (dark palettes)"
+msgid "Light background"
 msgstr ""
 
-msgid "Used when the default palette is dark. Light logo, 250 × 138 px. Falls back to the logo above."
+msgid "Dark logo."
+msgstr ""
+
+msgid "Dark background"
+msgstr ""
+
+msgid "Light logo."
 msgstr ""
 
 msgid "Login page background"
 msgstr ""
 
-msgid "Covers the whole page. 1920 × 1080 px recommended."
+msgid "Covers the whole page. 1920 × 1080 px recommended. Its brightness picks the login page logo."
 msgstr ""
 
 msgid "GLPI default"
@@ -139,6 +177,12 @@ msgstr ""
 msgid "Remove (back to GLPI default)"
 msgstr ""
 
+msgid "Drop an image here or click to browse"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
 msgid "Identity"
 msgstr ""
 
@@ -149,9 +193,6 @@ msgid "Replaces \"GLPI\" in the browser tab title, the two-factor authentication
 msgstr ""
 
 msgid "Images"
-msgstr ""
-
-msgid "None"
 msgstr ""
 
 msgid "Custom"

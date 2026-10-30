@@ -115,37 +115,59 @@ final class ThemeCompiler
         $blocks = [];
 
         // ---- Logos ---------------------------------------------------------------------
+        // Each logo has a variant for dark and for light backgrounds; the one that matches the
+        // actual background is used. A missing variant falls back to the other one.
+        $menu_dark     = self::firstUrl($images, ImageSlots::LOGO_MENU, ImageSlots::LOGO_MENU_LIGHT);
+        $menu_light    = self::firstUrl($images, ImageSlots::LOGO_MENU_LIGHT, ImageSlots::LOGO_MENU);
+        $reduced_dark  = self::firstUrl($images, ImageSlots::LOGO_MENU_REDUCED, ImageSlots::LOGO_MENU_REDUCED_LIGHT);
+        $reduced_light = self::firstUrl($images, ImageSlots::LOGO_MENU_REDUCED_LIGHT, ImageSlots::LOGO_MENU_REDUCED);
+        $login_light   = self::firstUrl($images, ImageSlots::LOGO_LOGIN, ImageSlots::LOGO_LOGIN_DARK);
+        $login_dark    = self::firstUrl($images, ImageSlots::LOGO_LOGIN_DARK, ImageSlots::LOGO_LOGIN);
+
         $root = [];
-        if (isset($images[ImageSlots::LOGO_MENU])) {
-            $root['--glpi-logo'] = self::url(ImageSlots::LOGO_MENU, $images);
+        // GLPI menus are dark in every palette.
+        if ($menu_dark !== null) {
+            $root['--glpi-logo'] = $menu_dark;
         }
-        if (isset($images[ImageSlots::LOGO_MENU_REDUCED])) {
-            $root['--glpi-logo-reduced'] = self::url(ImageSlots::LOGO_MENU_REDUCED, $images);
-        }
-        if (isset($images[ImageSlots::LOGO_LOGIN])) {
-            $root['--glpi-logo-dark-login'] = self::url(ImageSlots::LOGO_LOGIN, $images);
-            $root['--glpi-logo-light-login'] = self::url(ImageSlots::LOGO_LOGIN, $images);
-        }
-        if (isset($images[ImageSlots::LOGO_LOGIN_DARK])) {
-            $root['--glpi-logo-light-login'] = self::url(ImageSlots::LOGO_LOGIN_DARK, $images);
+        if ($reduced_dark !== null) {
+            $root['--glpi-logo-reduced'] = $reduced_dark;
         }
 
-        // Light main menu without a custom logo: switch to GLPI's dark logo to keep it visible.
-        $menu_color = $settings->get(Settings::MENU_COLOR);
-        if ($menu_color !== '' && self::isLight($menu_color)) {
-            $dark_logos = [];
-            if (!isset($images[ImageSlots::LOGO_MENU])) {
-                $dark_logos['--glpi-logo'] = 'var(--glpi-logo-dark)';
+        // Login page: GLPI shows --glpi-logo-dark-login on light palettes and
+        // --glpi-logo-light-login on dark palettes. When the plugin sets the background,
+        // its tone decides instead of the palette.
+        $login_tone = self::getLoginBackgroundTone($settings, $images);
+        if ($login_tone === null) {
+            if ($login_light !== null) {
+                $root['--glpi-logo-dark-login'] = $login_light;
             }
-            if (!isset($images[ImageSlots::LOGO_MENU_REDUCED])) {
-                $dark_logos['--glpi-logo-reduced'] = 'var(--glpi-logo-dark-reduced)';
+            if ($login_dark !== null) {
+                $root['--glpi-logo-light-login'] = $login_dark;
             }
-            if ($dark_logos !== []) {
-                $blocks[] = self::rule(self::colorScope($settings), $dark_logos);
+        } else {
+            $login_logo = $login_tone === 'dark' ? $login_dark : $login_light;
+            if ($login_logo !== null) {
+                $root['--glpi-logo-dark-login']  = $login_logo;
+                $root['--glpi-logo-light-login'] = $login_logo;
+            } elseif ($login_tone === 'dark') {
+                // GLPI's own logos: the light one on a dark background...
+                $root['--glpi-logo-dark-login'] = 'var(--glpi-logo-light-login)';
+            } else {
+                // ... and the dark one on a light background.
+                $root['--glpi-logo-light-login'] = 'var(--glpi-logo-dark-login)';
             }
         }
         if ($root !== []) {
             $blocks[] = self::rule(':root', $root);
+        }
+
+        // Light main menu (custom color): logos for light menus, or GLPI's dark logos.
+        $menu_color = $settings->get(Settings::MENU_COLOR);
+        if ($menu_color !== '' && self::isLight($menu_color)) {
+            $blocks[] = self::rule(self::colorScope($settings), [
+                '--glpi-logo'         => $menu_light ?? 'var(--glpi-logo-dark)',
+                '--glpi-logo-reduced' => $reduced_light ?? 'var(--glpi-logo-dark-reduced)',
+            ]);
         }
 
         $palette_logos = [];
@@ -248,7 +270,7 @@ final class ThemeCompiler
             $blocks[] = self::rule('body.welcome-anonymous', $background);
 
             // Text around the login card must stay readable on the new background.
-            $light_text = $has_bg_image || !self::isLight($login_bg_color);
+            $light_text = $login_tone !== 'light';
             $blocks[] = self::rule(
                 '.page-anonymous .container-tight > .text-center, .page-anonymous .container-tight > .text-center a, .page-anonymous .container-tight > .text-center .text-muted',
                 $light_text
@@ -307,6 +329,43 @@ final class ThemeCompiler
         $luminance = 0.2126 * $channel($r) + 0.7152 * $channel($g) + 0.0722 * $channel($b);
 
         return $luminance > 0.4;
+    }
+
+    /**
+     * Tone of the login page background set by the plugin: the background image (its tone is
+     * measured when it is uploaded), else the background color. Null: GLPI's own background,
+     * which follows the palette.
+     *
+     * @param array<string, array{ext: string, mime: string, hash: string, width: int, height: int, tone?: string}> $images
+     */
+    public static function getLoginBackgroundTone(Settings $settings, array $images): ?string
+    {
+        $image_tone = $images[ImageSlots::LOGIN_BACKGROUND]['tone'] ?? '';
+        if (isset($images[ImageSlots::LOGIN_BACKGROUND]) && in_array($image_tone, ['light', 'dark'], true)) {
+            return $image_tone;
+        }
+        $color = $settings->get(Settings::LOGIN_BG_COLOR);
+        if ($color !== '') {
+            return self::isLight($color) ? 'light' : 'dark';
+        }
+
+        return isset($images[ImageSlots::LOGIN_BACKGROUND]) ? 'dark' : null;
+    }
+
+    /**
+     * URL of the first slot that holds an image.
+     *
+     * @param array<string, array{ext: string, mime: string, hash: string, width: int, height: int}> $images
+     */
+    private static function firstUrl(array $images, string ...$slots): ?string
+    {
+        foreach ($slots as $slot) {
+            if (isset($images[$slot])) {
+                return self::url($slot, $images);
+            }
+        }
+
+        return null;
     }
 
     private static function colorScope(Settings $settings): string

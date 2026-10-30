@@ -59,22 +59,25 @@ final class ConfigController extends AbstractController
 {
     /** Example files shipped in public/examples, applied by the "Apply the examples" button. */
     private const EXAMPLES = [
-        ImageSlots::FAVICON           => 'favicon.ico',
-        ImageSlots::LOGO_MENU         => 'logo-PimpMyGLPI-250-white.png',
-        ImageSlots::LOGO_MENU_REDUCED => 'logo-P-100-white.png',
-        // The example background is dark: light logo on the login page.
-        ImageSlots::LOGO_LOGIN        => 'logo-PimpMyGLPI-250-white.png',
-        ImageSlots::LOGO_LOGIN_DARK   => 'logo-PimpMyGLPI-250-white.png',
-        ImageSlots::LOGIN_BACKGROUND  => 'login-background.jpg',
+        ImageSlots::FAVICON                 => 'favicon.ico',
+        ImageSlots::LOGO_MENU               => 'logo-PimpMyGLPI-250-white.png',
+        ImageSlots::LOGO_MENU_LIGHT         => 'logo-PimpMyGLPI-250-black.png',
+        ImageSlots::LOGO_MENU_REDUCED       => 'logo-P-100-white.png',
+        ImageSlots::LOGO_MENU_REDUCED_LIGHT => 'logo-P-100-black.png',
+        ImageSlots::LOGO_LOGIN              => 'logo-PimpMyGLPI-250-black.png',
+        ImageSlots::LOGO_LOGIN_DARK         => 'logo-PimpMyGLPI-250-white.png',
+        ImageSlots::LOGIN_BACKGROUND        => 'login-background.jpg',
     ];
 
     /** GLPI images shown as "current" when a slot is not customized. */
     private const DEFAULT_IMAGES = [
-        ImageSlots::FAVICON           => '/pics/favicon.ico',
-        ImageSlots::LOGO_MENU         => '/pics/logos/logo-GLPI-100-white.png',
-        ImageSlots::LOGO_MENU_REDUCED => '/pics/logos/logo-G-100-white.png',
-        ImageSlots::LOGO_LOGIN        => '/pics/logos/logo-GLPI-250-black.png',
-        ImageSlots::LOGO_LOGIN_DARK   => '/pics/logos/logo-GLPI-250-white.png',
+        ImageSlots::FAVICON                 => '/pics/favicon.ico',
+        ImageSlots::LOGO_MENU               => '/pics/logos/logo-GLPI-100-white.png',
+        ImageSlots::LOGO_MENU_LIGHT         => '/pics/logos/logo-GLPI-100-black.png',
+        ImageSlots::LOGO_MENU_REDUCED       => '/pics/logos/logo-G-100-white.png',
+        ImageSlots::LOGO_MENU_REDUCED_LIGHT => '/pics/logos/logo-G-100-black.png',
+        ImageSlots::LOGO_LOGIN              => '/pics/logos/logo-GLPI-250-black.png',
+        ImageSlots::LOGO_LOGIN_DARK         => '/pics/logos/logo-GLPI-250-white.png',
     ];
 
     #[Route('/config', name: 'config', methods: ['GET'])]
@@ -87,19 +90,32 @@ final class ConfigController extends AbstractController
         $images   = $settings->getImages();
         $palettes = self::getPalettes();
 
-        $global_slots = [];
-        foreach (self::getSlotTexts() as $slot => [$label, $help]) {
-            $global_slots[] = [
-                'slot'    => $slot,
-                'label'   => $label,
-                'help'    => $help,
-                'formats' => strtoupper(implode(', ', ImageSlots::getDefinition($slot)['types'])),
-                'accept'  => ImageSlots::getAcceptAttribute($slot),
-                'image'   => self::describeImage($slot, $images),
-                'dark'    => in_array($slot, [ImageSlots::LOGO_MENU, ImageSlots::LOGO_MENU_REDUCED, ImageSlots::LOGO_LOGIN_DARK], true),
-                'default' => self::DEFAULT_IMAGES[$slot] ?? null,
-            ];
+        $image_groups = [];
+        foreach (self::getImageGroups() as $key => $group) {
+            $variants = [];
+            foreach ($group['variants'] as $variant) {
+                $variants[] = $variant + self::describeSlot($variant['slot'], $images);
+            }
+            $image_groups[] = ['key' => $key, 'variants' => $variants] + $group;
         }
+
+        // Information shown under the image groups
+        $messages = [];
+        $menu_color = $settings->get(Settings::MENU_COLOR);
+        if ($menu_color !== '' && ThemeCompiler::isLight($menu_color)) {
+            foreach ([ImageSlots::LOGO_MENU => ImageSlots::LOGO_MENU_LIGHT, ImageSlots::LOGO_MENU_REDUCED => ImageSlots::LOGO_MENU_REDUCED_LIGHT] as $dark => $light) {
+                if (isset($images[$dark]) && !isset($images[$light])) {
+                    $messages['menu'] = __('The main menu color is light: add the logos for light menus, the logos for dark menus may not be readable.', 'pimpmyglpi');
+                }
+            }
+        }
+        $login_tone = ThemeCompiler::getLoginBackgroundTone($settings, $images);
+        $source     = isset($images[ImageSlots::LOGIN_BACKGROUND]) ? __('background image', 'pimpmyglpi') : __('background color', 'pimpmyglpi');
+        $messages['login'] = match ($login_tone) {
+            'dark'  => sprintf(__('The login page background is dark (%s): the logo for a dark background is used.', 'pimpmyglpi'), $source),
+            'light' => sprintf(__('The login page background is light (%s): the logo for a light background is used.', 'pimpmyglpi'), $source),
+            default => __('The login page keeps the GLPI background: light palettes use the logo for a light background, dark palettes the logo for a dark background.', 'pimpmyglpi'),
+        };
 
         $palette_images = [];
         foreach ($palettes as $key => $palette) {
@@ -119,11 +135,15 @@ final class ConfigController extends AbstractController
             'settings'       => $settings->toArray(),
             'choices'        => self::getChoiceLabels(),
             'palettes'       => $palettes,
-            'global_slots'   => $global_slots,
+            'image_groups'   => $image_groups,
+            'messages'       => $messages,
+            'plugin_version' => PLUGIN_PIMPMYGLPI_VERSION,
             'palette_logos'  => ImageSlots::PALETTE_LOGOS,
             'palette_images' => $palette_images,
             'logo_labels'    => self::getPaletteLogoLabels(),
             'logo_accept'    => ImageSlots::getAcceptAttribute(ImageSlots::LOGO_MENU),
+            'logo_formats'   => strtoupper(implode(', ', ImageSlots::getDefinition(ImageSlots::LOGO_MENU)['types'])),
+            'logo_max_size'  => ImageSlots::getDefinition(ImageSlots::LOGO_MENU)['max_size'],
             'examples_url'   => $examples_url,
             'base_path'      => $request->getBasePath(),
             'examples'       => [
@@ -209,13 +229,13 @@ final class ConfigController extends AbstractController
         }
 
         $validated = [];
-        $labels    = self::getSlotTexts();
+        $labels    = self::getSlotLabels();
         foreach ($uploads as $slot => $file) {
             if (!$file instanceof UploadedFile) {
                 continue;
             }
             $parsed = ImageSlots::parse($slot);
-            $label  = ($labels[$parsed['base'] ?? ''] ?? [$slot])[0];
+            $label  = $labels[$parsed['base'] ?? ''] ?? $slot;
             if (($parsed['palette'] ?? null) !== null) {
                 $label .= ' (' . ($palettes[$parsed['palette']]['name'] ?? $parsed['palette']) . ')';
             }
@@ -360,17 +380,106 @@ final class ConfigController extends AbstractController
     }
 
     /**
-     * @return array<string, array{string, string}>
+     * Images of the configuration page, grouped by place. Logos have a variant for dark and
+     * for light backgrounds: the one that matches the actual background is used.
+     *
+     * @return array<string, array{label: string, help: string, variants: list<array{slot: string, label: string, note: string, background: string}>}>
      */
-    private static function getSlotTexts(): array
+    private static function getImageGroups(): array
     {
+        $dark_menu = [
+            'label'      => __('Dark menu', 'pimpmyglpi'),
+            'note'       => __('Light logo. GLPI menus are dark: used by default.', 'pimpmyglpi'),
+            'background' => 'dark',
+        ];
+        $light_menu = [
+            'label'      => __('Light menu', 'pimpmyglpi'),
+            'note'       => __('Dark logo. Used when the main menu color is light.', 'pimpmyglpi'),
+            'background' => 'light',
+        ];
+
         return [
-            ImageSlots::FAVICON           => [__('Favicon', 'pimpmyglpi'), __('Icon of the browser tab. Square, 32 × 32 px or more.', 'pimpmyglpi')],
-            ImageSlots::LOGO_MENU         => [__('Main menu logo', 'pimpmyglpi'), __('GLPI format: 100 × 55 px (250 × 138 px for sharp screens). Light logo, the menu is dark.', 'pimpmyglpi')],
-            ImageSlots::LOGO_MENU_REDUCED => [__('Collapsed menu logo', 'pimpmyglpi'), __('Shown when the menu is collapsed. Square, GLPI format: 53 × 53 px.', 'pimpmyglpi')],
-            ImageSlots::LOGO_LOGIN        => [__('Login page logo', 'pimpmyglpi'), __('GLPI format: 250 × 138 px. Dark logo for light palettes, or a light logo on a dark background image.', 'pimpmyglpi')],
-            ImageSlots::LOGO_LOGIN_DARK   => [__('Login page logo (dark palettes)', 'pimpmyglpi'), __('Used when the default palette is dark. Light logo, 250 × 138 px. Falls back to the logo above.', 'pimpmyglpi')],
-            ImageSlots::LOGIN_BACKGROUND  => [__('Login page background', 'pimpmyglpi'), __('Covers the whole page. 1920 × 1080 px recommended.', 'pimpmyglpi')],
+            'favicon' => [
+                'label'    => __('Favicon', 'pimpmyglpi'),
+                'help'     => __('Icon of the browser tab. Square, 32 × 32 px or more (a multi-size ICO is best).', 'pimpmyglpi'),
+                'variants' => [['slot' => ImageSlots::FAVICON, 'label' => '', 'note' => '', 'background' => 'checker']],
+            ],
+            'menu' => [
+                'label'    => __('Main menu logo', 'pimpmyglpi'),
+                'help'     => __('GLPI format: 100 × 55 px, or 250 × 138 px and more for sharp screens.', 'pimpmyglpi'),
+                'variants' => [
+                    ['slot' => ImageSlots::LOGO_MENU] + $dark_menu,
+                    ['slot' => ImageSlots::LOGO_MENU_LIGHT] + $light_menu,
+                ],
+            ],
+            'menu_reduced' => [
+                'label'    => __('Collapsed menu logo', 'pimpmyglpi'),
+                'help'     => __('Square. GLPI format: 53 × 53 px, or 159 × 159 px and more for sharp screens.', 'pimpmyglpi'),
+                'variants' => [
+                    ['slot' => ImageSlots::LOGO_MENU_REDUCED] + $dark_menu,
+                    ['slot' => ImageSlots::LOGO_MENU_REDUCED_LIGHT] + $light_menu,
+                ],
+            ],
+            'login' => [
+                'label'    => __('Login page logo', 'pimpmyglpi'),
+                'help'     => __('GLPI format: 250 × 138 px, or 750 × 414 px and more for sharp screens.', 'pimpmyglpi'),
+                'variants' => [
+                    [
+                        'slot'       => ImageSlots::LOGO_LOGIN,
+                        'label'      => __('Light background', 'pimpmyglpi'),
+                        'note'       => __('Dark logo.', 'pimpmyglpi'),
+                        'background' => 'light',
+                    ],
+                    [
+                        'slot'       => ImageSlots::LOGO_LOGIN_DARK,
+                        'label'      => __('Dark background', 'pimpmyglpi'),
+                        'note'       => __('Light logo.', 'pimpmyglpi'),
+                        'background' => 'dark',
+                    ],
+                ],
+            ],
+            'background' => [
+                'label'    => __('Login page background', 'pimpmyglpi'),
+                'help'     => __('Covers the whole page. 1920 × 1080 px recommended. Its brightness picks the login page logo.', 'pimpmyglpi'),
+                'variants' => [['slot' => ImageSlots::LOGIN_BACKGROUND, 'label' => '', 'note' => '', 'background' => 'checker']],
+            ],
+        ];
+    }
+
+    /**
+     * Labels used in the error messages.
+     *
+     * @return array<string, string>
+     */
+    private static function getSlotLabels(): array
+    {
+        $labels = [];
+        foreach (self::getImageGroups() as $group) {
+            foreach ($group['variants'] as $variant) {
+                $labels[$variant['slot']] = $group['label'] . ($variant['label'] !== '' ? ' (' . $variant['label'] . ')' : '');
+            }
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Constraints, current image and GLPI default of a slot, for the configuration page.
+     *
+     * @param array<string, array{ext: string, mime: string, hash: string, width: int, height: int, tone: string}> $images
+     *
+     * @return array<string, mixed>
+     */
+    private static function describeSlot(string $slot, array $images): array
+    {
+        $definition = ImageSlots::getDefinition($slot);
+
+        return [
+            'formats'  => strtoupper(implode(', ', $definition['types'])),
+            'accept'   => ImageSlots::getAcceptAttribute($slot),
+            'max_size' => $definition['max_size'],
+            'image'    => self::describeImage($slot, $images),
+            'default'  => self::DEFAULT_IMAGES[$slot] ?? null,
         ];
     }
 

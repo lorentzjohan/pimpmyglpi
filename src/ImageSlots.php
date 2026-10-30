@@ -38,11 +38,17 @@ use function Safe\preg_match;
 final class ImageSlots
 {
     public const FAVICON           = 'favicon';
-    public const LOGO_MENU         = 'logo_menu';
-    public const LOGO_MENU_REDUCED = 'logo_menu_reduced';
-    public const LOGO_LOGIN        = 'logo_login';
-    public const LOGO_LOGIN_DARK   = 'logo_login_dark';
-    public const LOGIN_BACKGROUND  = 'login_background';
+    /** Main menu logo for dark menus (light logo): GLPI menus are dark, this is the default one. */
+    public const LOGO_MENU               = 'logo_menu';
+    /** Main menu logo for light menus (dark logo): used when the main menu color is light. */
+    public const LOGO_MENU_LIGHT         = 'logo_menu_light';
+    public const LOGO_MENU_REDUCED       = 'logo_menu_reduced';
+    public const LOGO_MENU_REDUCED_LIGHT = 'logo_menu_reduced_light';
+    /** Login page logo for a light background (dark logo). */
+    public const LOGO_LOGIN              = 'logo_login';
+    /** Login page logo for a dark background (light logo). */
+    public const LOGO_LOGIN_DARK         = 'logo_login_dark';
+    public const LOGIN_BACKGROUND        = 'login_background';
 
     /** Logos that can be replaced for a single palette. */
     public const PALETTE_LOGOS = [self::LOGO_MENU, self::LOGO_MENU_REDUCED, self::LOGO_LOGIN];
@@ -56,11 +62,13 @@ final class ImageSlots
     /** @var array<string, array{types: list<string>, max_size: int, max_px: int}> */
     private const DEFINITIONS = [
         self::FAVICON           => ['types' => ['ico', 'png', 'svg'], 'max_size' => 512 * 1024, 'max_px' => 1024],
-        self::LOGO_MENU         => self::LOGO_DEFINITION,
-        self::LOGO_MENU_REDUCED => self::LOGO_DEFINITION,
-        self::LOGO_LOGIN        => self::LOGO_DEFINITION,
-        self::LOGO_LOGIN_DARK   => self::LOGO_DEFINITION,
-        self::LOGIN_BACKGROUND  => ['types' => ['jpg', 'png', 'webp'], 'max_size' => 8 * 1024 * 1024, 'max_px' => 10000],
+        self::LOGO_MENU               => self::LOGO_DEFINITION,
+        self::LOGO_MENU_LIGHT         => self::LOGO_DEFINITION,
+        self::LOGO_MENU_REDUCED       => self::LOGO_DEFINITION,
+        self::LOGO_MENU_REDUCED_LIGHT => self::LOGO_DEFINITION,
+        self::LOGO_LOGIN              => self::LOGO_DEFINITION,
+        self::LOGO_LOGIN_DARK         => self::LOGO_DEFINITION,
+        self::LOGIN_BACKGROUND        => ['types' => ['jpg', 'png', 'webp'], 'max_size' => 8 * 1024 * 1024, 'max_px' => 10000],
     ];
 
     /**

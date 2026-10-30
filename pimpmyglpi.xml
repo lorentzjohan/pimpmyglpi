@@ -8,7 +8,7 @@
          <en>Give GLPI your own look: name, favicon, logos (also per palette), colors, login page and custom CSS.</en>
       </short>
       <long>
-         <en>Customize what users see in GLPI without modifying any GLPI file: application name in the browser tab, favicon, main menu, collapsed menu and login page logos, logos for a single palette, main and menu colors, corners, font, login page background and frosted glass login box, a palette forced for everyone and custom CSS. Example logos in the GLPI formats are included.</en>
+         <en>Customize what users see in GLPI without modifying any GLPI file: application name in the browser tab, favicon, main menu, collapsed menu and login page logos with a variant for dark and for light backgrounds picked automatically, logos for a single palette, drag and drop upload, main and menu colors, corners, font, login page background and frosted glass login box, a palette forced for everyone and custom CSS. Example logos in the GLPI formats are included.</en>
       </long>
    </description>
    <homepage>https://github.com/lorentzjohan</homepage>
@@ -19,6 +19,11 @@
       <author>LORENTZ Johan</author>
    </authors>
    <versions>
+      <version>
+         <num>1.1.0</num>
+         <compatibility>~11.0</compatibility>
+         <compatibility>~12.0</compatibility>
+      </version>
       <version>
          <num>1.0.0</num>
          <compatibility>~11.0</compatibility>

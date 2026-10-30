@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0] - 2026-10-29
+
+### Added
+- Drag and drop of the images on the configuration page, with an immediate preview, type and size checks, and a cancel button.
+- Logos for light menus (main menu and collapsed menu), used when the main menu color is light.
+- Information on the configuration page about the login page logo in use, and a warning when the main menu is light without logos for light menus.
+
+### Changed
+- The login page logos are now "light background" and "dark background" logos. When the plugin sets the login page background, its brightness (measured at upload for images) picks the logo instead of the palette. Without a custom background, the palette still decides, as before.
+- A missing logo variant falls back to the other one; GLPI's own login logo also follows a custom background.
+- Images are grouped by place on the configuration page, with the GLPI image shown when nothing is customized.
+
 ## [1.0.0] - 2026-10-29
 
 First release.

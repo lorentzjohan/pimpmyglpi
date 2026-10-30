@@ -91,6 +91,61 @@ final class SettingsTest extends TestCase
         $this->assertStringContainsString('--tblr-border-radius: 0', $css);
     }
 
+    /**
+     * @return array{ext: string, mime: string, hash: string, width: int, height: int, tone: string}
+     */
+    private static function image(string $hash, string $tone = ''): array
+    {
+        return ['ext' => 'png', 'mime' => 'image/png', 'hash' => $hash, 'width' => 250, 'height' => 138, 'tone' => $tone];
+    }
+
+    public function testLoginLogoFollowsTheBackground(): void
+    {
+        $logos = [
+            ImageSlots::LOGO_LOGIN      => self::image('aaaaaaaaaaaaaaaa'),
+            ImageSlots::LOGO_LOGIN_DARK => self::image('bbbbbbbbbbbbbbbb'),
+        ];
+
+        // No background set by the plugin: GLPI's palette-based choice.
+        $css = ThemeCompiler::buildCss(Settings::fromArray([]), $logos);
+        $this->assertStringContainsString('--glpi-logo-dark-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login?h=aaaaaaaaaaaaaaaa")', $css);
+        $this->assertStringContainsString('--glpi-logo-light-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login_dark?h=bbbbbbbbbbbbbbbb")', $css);
+
+        // Dark background image: the logo for a dark background everywhere.
+        $images = $logos + [ImageSlots::LOGIN_BACKGROUND => self::image('cccccccccccccccc', 'dark')];
+        $this->assertSame('dark', ThemeCompiler::getLoginBackgroundTone(Settings::fromArray([]), $images));
+        $css = ThemeCompiler::buildCss(Settings::fromArray([]), $images);
+        $this->assertStringContainsString('--glpi-logo-dark-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login_dark?h=bbbbbbbbbbbbbbbb")', $css);
+        $this->assertStringNotContainsString('asset/logo_login?h=', $css);
+
+        // Light background color: the logo for a light background everywhere.
+        $settings = Settings::fromArray([Settings::LOGIN_BG_COLOR => '#f1f5f9']);
+        $this->assertSame('light', ThemeCompiler::getLoginBackgroundTone($settings, $logos));
+        $css = ThemeCompiler::buildCss($settings, $logos);
+        $this->assertStringContainsString('--glpi-logo-light-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login?h=aaaaaaaaaaaaaaaa")', $css);
+        $this->assertStringNotContainsString('asset/logo_login_dark?h=', $css);
+
+        // A single variant is used for both backgrounds.
+        $css = ThemeCompiler::buildCss(Settings::fromArray([]), [ImageSlots::LOGO_LOGIN_DARK => self::image('bbbbbbbbbbbbbbbb')]);
+        $this->assertStringContainsString('--glpi-logo-dark-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login_dark?h=bbbbbbbbbbbbbbbb")', $css);
+    }
+
+    public function testLightMenuUsesTheLogosForLightMenus(): void
+    {
+        $settings = Settings::fromArray([Settings::MENU_COLOR => '#e2e8f0']);
+
+        $css = ThemeCompiler::buildCss($settings, [
+            ImageSlots::LOGO_MENU       => self::image('aaaaaaaaaaaaaaaa'),
+            ImageSlots::LOGO_MENU_LIGHT => self::image('dddddddddddddddd'),
+        ]);
+        $this->assertStringContainsString(':root[data-glpi-theme-dark="0"] {' . "\n" . '    --glpi-logo: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_menu_light?h=dddddddddddddddd")', $css);
+
+        // Without any custom logo: GLPI's dark logos.
+        $css = ThemeCompiler::buildCss($settings, []);
+        $this->assertStringContainsString('--glpi-logo: var(--glpi-logo-dark)', $css);
+        $this->assertStringContainsString('--glpi-logo-reduced: var(--glpi-logo-dark-reduced)', $css);
+    }
+
     public function testCustomCssCannotCloseAnElement(): void
     {
         $this->assertSame('a{color:red}', ThemeCompiler::sanitizeCustomCss("</style>a{color:red}\0"));
