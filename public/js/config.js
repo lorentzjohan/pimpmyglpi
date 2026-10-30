@@ -73,7 +73,9 @@
         var name = zone.querySelector('.pimpmyglpi-drop-name');
         var clear = zone.querySelector('.pimpmyglpi-drop-clear');
         var error = zone.querySelector('.pimpmyglpi-drop-error');
-        var originalPreview = preview.innerHTML;
+        var originalPreview = Array.prototype.map.call(preview.childNodes, function (node) {
+            return node.cloneNode(true);
+        });
         var objectUrl = null;
 
         var formats = (zone.getAttribute('data-formats') || '').toLowerCase().split(',').map(function (format) {
@@ -89,7 +91,9 @@
                 URL.revokeObjectURL(objectUrl);
                 objectUrl = null;
             }
-            preview.innerHTML = originalPreview;
+            preview.replaceChildren.apply(preview, originalPreview.map(function (node) {
+                return node.cloneNode(true);
+            }));
             selection.classList.add('d-none');
             zone.classList.remove('has-file');
         }
@@ -124,11 +128,13 @@
                 return;
             }
             objectUrl = URL.createObjectURL(file);
+            if (!objectUrl.startsWith('blob:')) {
+                return;
+            }
             var image = document.createElement('img');
             image.alt = '';
             image.src = objectUrl;
-            preview.innerHTML = '';
-            preview.appendChild(image);
+            preview.replaceChildren(image);
             name.textContent = file.name + ' (' + formatSize(file.size) + ')';
             selection.classList.remove('d-none');
             zone.classList.add('has-file');
