@@ -17,6 +17,7 @@
 - Continuous integration on GLPI 11 and 12 (`.github/workflows/continuous-integration.yml`): PHP-CS-Fixer, PHPStan (max level), Psalm (with taint analysis), Rector, TwigCS, licence headers, install and clean uninstall.
 - Integration tests running inside GLPI: upload checks (real and malicious files), file permissions, image tone, compiled theme and runtime data, login logo variants, settings update and uninstall.
 - Line endings normalized to LF in the repository (`.gitattributes`).
+- Plugin information points to the GitHub repository (homepage, downloads, issues, README), and the README documents the update.
 
 ## [1.1.0] - 2026-10-29
 

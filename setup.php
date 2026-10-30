@@ -84,7 +84,7 @@ function plugin_version_pimpmyglpi(): array
         'version'      => PLUGIN_PIMPMYGLPI_VERSION,
         'author'       => 'LORENTZ Johan',
         'license'      => 'GPL-3.0-or-later',
-        'homepage'     => 'https://github.com/lorentzjohan',
+        'homepage'     => 'https://github.com/lorentzjohan/pimpmyglpi',
         'requirements' => [
             'glpi' => [
                 'min' => PLUGIN_PIMPMYGLPI_MIN_GLPI_VERSION,

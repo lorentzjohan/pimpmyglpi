@@ -11,10 +11,10 @@
          <en>Customize what users see in GLPI without modifying any GLPI file: application name in the browser tab, favicon, main menu, collapsed menu and login page logos with a variant for dark and for light backgrounds picked automatically, logos for a single palette, drag and drop upload, main and menu colors, corners, font, login page background and frosted glass login box, a palette forced for everyone and custom CSS. Example logos in the GLPI formats are included.</en>
       </long>
    </description>
-   <homepage>https://github.com/lorentzjohan</homepage>
-   <download></download>
-   <issues></issues>
-   <readme></readme>
+   <homepage>https://github.com/lorentzjohan/pimpmyglpi</homepage>
+   <download>https://github.com/lorentzjohan/pimpmyglpi/releases</download>
+   <issues>https://github.com/lorentzjohan/pimpmyglpi/issues</issues>
+   <readme>https://github.com/lorentzjohan/pimpmyglpi/blob/main/README.md</readme>
    <authors>
       <author>LORENTZ Johan</author>
    </authors>

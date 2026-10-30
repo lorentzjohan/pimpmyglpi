@@ -40,7 +40,7 @@ Give GLPI your own look: application name, favicon, logos (also per palette), co
 
 - **No GLPI file is modified.** Logos are replaced through the CSS variables GLPI already uses (`--glpi-logo`, `--glpi-logo-reduced`, `--glpi-logo-dark-login`, `--glpi-logo-light-login`), the same in GLPI 11 and 12. A GLPI update never undoes the customization.
 - **Images stay outside the web root**, in the GLPI data directory (`GLPI_PLUGIN_DOC_DIR/pimpmyglpi/images/`), and are served by the plugin with long, versioned caching.
-- **No database query on page load.** When the settings are saved, they are compiled into two small files (`theme.css` and `runtime.json` in `files/_plugins/pimpmyglpi/`). Every page only reads `runtime.json`.
+- **No database query on page load.** When the settings are saved (and on the first page after an install or an update), they are compiled into two small files, `theme.css` and `runtime.json`, in `GLPI_PLUGIN_DOC_DIR/pimpmyglpi/`. Every page only reads `runtime.json`.
 
 ## Installation
 
@@ -50,11 +50,24 @@ Give GLPI your own look: application name, favicon, logos (also per palette), co
 From the command line:
 
 ```bash
-php bin/console plugin:install pimpmyglpi -u glpi
-php bin/console plugin:activate pimpmyglpi
+sudo -u www-data php bin/console plugin:install pimpmyglpi -u glpi
+sudo -u www-data php bin/console plugin:activate pimpmyglpi
 ```
 
 The plugin never writes in its own folder nor in the GLPI code. Settings are stored in the database, images and compiled files in `GLPI_PLUGIN_DOC_DIR/pimpmyglpi/` (`files/_plugins/pimpmyglpi/` by default, `/var/lib/glpi/_plugins/pimpmyglpi/` when `GLPI_VAR_DIR` is `/var/lib/glpi`). Only this data directory must be writable by the web server, as it already is for GLPI. The files are created with private permissions (`0640`, directories `0750`): as recommended by GLPI, run the console commands as the web server user (for example `sudo -u www-data php bin/console ...`). The theme is compiled on the first page after an install or an update.
+
+## Update
+
+1. Replace the `plugins/pimpmyglpi` folder.
+2. In **Setup > Plugins**, click **Update**: the settings and the images are kept.
+3. Clear the cache: `sudo -u www-data php bin/console cache:clear`.
+
+From 1.1.0 or older, apply the private permissions to the files already stored (adapt the path to your `GLPI_PLUGIN_DOC_DIR`):
+
+```bash
+find /var/lib/glpi/_plugins/pimpmyglpi -type f -exec chmod 0640 {} +
+find /var/lib/glpi/_plugins/pimpmyglpi -type d -exec chmod 0750 {} +
+```
 
 ## Configuration
 
@@ -110,7 +123,6 @@ The configuration page shows them, lets you download them, and applies them in o
 
 - The application name also changes the label of new two-factor authentication enrollments. Existing enrollments in authenticator apps keep their label.
 - When a palette is forced, the palette chosen in personal preferences is kept in the database but ignored.
-- On a server where the plugin files are replaced, run `php bin/console cache:clear` after an update.
 
 ## Uninstallation
 
