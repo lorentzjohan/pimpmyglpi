@@ -1,0 +1,243 @@
+# PimpMyGLPI plugin for GLPI
+# Copyright (C) 2026 LORENTZ Johan
+# This file is distributed under the GNU General Public License v3 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: pimpmyglpi 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: 2026-10-29 00:00+0000\n"
+"Last-Translator: LORENTZ Johan\n"
+"Language-Team: LORENTZ Johan\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Unknown palette."
+msgstr "Palette inconnue."
+
+msgid "Invalid value."
+msgstr "Valeur invalide."
+
+msgid "Invalid color: use the #RRGGBB format."
+msgstr "Couleur invalide : utilisez le format #RRVVBB."
+
+#, php-format
+msgid "The custom CSS is too long: %d characters at most."
+msgstr "Le CSS personnalisé est trop long : %d caractères au maximum."
+
+msgid "Choose the palette the logos are for."
+msgstr "Choisissez la palette à laquelle s'appliquent les logos."
+
+#, php-format
+msgid "%1$s: the upload failed (%2$s)."
+msgstr "%1$s : l'envoi a échoué (%2$s)."
+
+msgid "Nothing was saved."
+msgstr "Rien n'a été enregistré."
+
+msgid "Settings saved"
+msgstr "Paramètres enregistrés"
+
+msgid "The example images are applied."
+msgstr "Les images d'exemple sont appliquées."
+
+msgid "GLPI appearance restored."
+msgstr "Apparence de GLPI restaurée."
+
+msgid "The changes could not be saved: check that GLPI can write in its files directory."
+msgstr "Les modifications n'ont pas pu être enregistrées : vérifiez que GLPI peut écrire dans son dossier files."
+
+msgid "Favicon"
+msgstr "Favicon"
+
+msgid "Icon of the browser tab. Square, 32 × 32 px or more."
+msgstr "Icône de l'onglet du navigateur. Carrée, 32 × 32 px ou plus."
+
+msgid "Main menu logo"
+msgstr "Logo du menu principal"
+
+msgid "GLPI format: 100 × 55 px (250 × 138 px for sharp screens). Light logo, the menu is dark."
+msgstr "Format GLPI : 100 × 55 px (250 × 138 px pour les écrans haute définition). Logo clair, le menu est foncé."
+
+msgid "Collapsed menu logo"
+msgstr "Logo du menu replié"
+
+msgid "Shown when the menu is collapsed. Square, GLPI format: 53 × 53 px."
+msgstr "Affiché quand le menu est replié. Carré, format GLPI : 53 × 53 px."
+
+msgid "Login page logo"
+msgstr "Logo de la page de connexion"
+
+msgid "GLPI format: 250 × 138 px. Dark logo for light palettes, or a light logo on a dark background image."
+msgstr "Format GLPI : 250 × 138 px. Logo foncé pour les palettes claires, ou logo clair sur une image de fond sombre."
+
+msgid "Login page logo (dark palettes)"
+msgstr "Logo de la page de connexion (palettes sombres)"
+
+msgid "Used when the default palette is dark. Light logo, 250 × 138 px. Falls back to the logo above."
+msgstr "Utilisé quand la palette par défaut est sombre. Logo clair, 250 × 138 px. À défaut, le logo ci-dessus est utilisé."
+
+msgid "Login page background"
+msgstr "Fond de la page de connexion"
+
+msgid "Covers the whole page. 1920 × 1080 px recommended."
+msgstr "Couvre toute la page. 1920 × 1080 px recommandé."
+
+msgid "GLPI default"
+msgstr "Par défaut de GLPI"
+
+msgid "Square"
+msgstr "Carrés"
+
+msgid "Rounded"
+msgstr "Arrondis"
+
+msgid "GLPI default (Inter)"
+msgstr "Par défaut de GLPI (Inter)"
+
+msgid "Operating system font"
+msgstr "Police du système d'exploitation"
+
+msgid "Frosted glass"
+msgstr "Verre dépoli"
+
+msgid "file too large for the server"
+msgstr "fichier trop volumineux pour le serveur"
+
+msgid "file partially received"
+msgstr "fichier reçu partiellement"
+
+msgid "server error"
+msgstr "erreur du serveur"
+
+msgid "The file could not be read."
+msgstr "Le fichier n'a pas pu être lu."
+
+msgid "The file is empty."
+msgstr "Le fichier est vide."
+
+#, php-format
+msgid "The file is too large: %s at most."
+msgstr "Le fichier est trop volumineux : %s au maximum."
+
+msgid "This SVG file contains elements that are not allowed (scripts, external links or entities)."
+msgstr "Ce fichier SVG contient des éléments interdits (scripts, liens externes ou entités)."
+
+#, php-format
+msgid "Unsupported file type. Accepted formats: %s."
+msgstr "Type de fichier non pris en charge. Formats acceptés : %s."
+
+msgid "The image could not be read."
+msgstr "L'image n'a pas pu être lue."
+
+#, php-format
+msgid "The image is too large: %d px at most per side."
+msgstr "L'image est trop grande : %d px au maximum par côté."
+
+msgid "Remove (back to GLPI default)"
+msgstr "Supprimer (retour à l'image de GLPI)"
+
+msgid "Identity"
+msgstr "Identité"
+
+msgid "Application name"
+msgstr "Nom de l'application"
+
+msgid "Replaces \"GLPI\" in the browser tab title, the two-factor authentication app label and the notification footer. Leave empty to keep GLPI."
+msgstr "Remplace « GLPI » dans le titre de l'onglet du navigateur, le libellé de l'application de double authentification et le pied des notifications. Laisser vide pour garder GLPI."
+
+msgid "Images"
+msgstr "Images"
+
+msgid "None"
+msgstr "Aucune"
+
+msgid "Custom"
+msgstr "Personnalisé"
+
+msgid "Logos by palette"
+msgstr "Logos par palette"
+
+msgid "Replace the logos for one palette only, for example a dark logo for a palette with a light menu. Palette logos take priority over the logos above."
+msgstr "Remplacer les logos d'une seule palette, par exemple un logo foncé pour une palette au menu clair. Les logos d'une palette sont prioritaires sur les logos ci-dessus."
+
+msgid "dark"
+msgstr "sombre"
+
+msgid "Palette"
+msgstr "Palette"
+
+msgid "Colors and style"
+msgstr "Couleurs et style"
+
+msgid "Main color"
+msgstr "Couleur principale"
+
+msgid "Buttons, selected items and highlights."
+msgstr "Boutons, éléments sélectionnés et mises en avant."
+
+msgid "Main menu background"
+msgstr "Fond du menu principal"
+
+msgid "The text color adapts automatically."
+msgstr "La couleur du texte s'adapte automatiquement."
+
+msgid "Apply these colors to dark palettes too"
+msgstr "Appliquer aussi ces couleurs aux palettes sombres"
+
+msgid "Corners"
+msgstr "Coins"
+
+msgid "Font"
+msgstr "Police"
+
+msgid "Login page"
+msgstr "Page de connexion"
+
+msgid "Background color"
+msgstr "Couleur de fond"
+
+msgid "Used without a background image, or while it loads."
+msgstr "Utilisée sans image de fond, ou pendant son chargement."
+
+msgid "Login box style"
+msgstr "Style de la boîte de connexion"
+
+msgid "No, users choose their palette"
+msgstr "Non, chaque utilisateur choisit sa palette"
+
+msgid "Force a palette for everyone"
+msgstr "Imposer une palette à tous"
+
+msgid "Applies to every user and to the login page. The palette chosen in personal preferences is ignored."
+msgstr "S'applique à tous les utilisateurs et à la page de connexion. La palette choisie dans les préférences personnelles est ignorée."
+
+msgid "Custom CSS"
+msgstr "CSS personnalisé"
+
+msgid "CSS rules"
+msgstr "Règles CSS"
+
+msgid "Added after all the GLPI styles, on every page including the login page."
+msgstr "Ajoutées après tous les styles de GLPI, sur toutes les pages y compris la page de connexion."
+
+#, php-format
+msgid "Maximum upload size of the server: %s"
+msgstr "Taille d'envoi maximale du serveur : %s"
+
+msgid "Example images"
+msgstr "Images d'exemple"
+
+msgid "Ready-made images in the GLPI formats, to try the plugin or to use as templates (SVG sources included in the plugin)."
+msgstr "Images prêtes à l'emploi aux formats de GLPI, pour essayer le plugin ou servir de modèles (sources SVG incluses dans le plugin)."
+
+msgid "Apply the example images"
+msgstr "Appliquer les images d'exemple"
+
+msgid "Remove every customization and restore the GLPI appearance?"
+msgstr "Supprimer toutes les personnalisations et restaurer l'apparence de GLPI ?"
+
+msgid "Restore the GLPI appearance"
+msgstr "Restaurer l'apparence de GLPI"

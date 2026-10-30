@@ -1,0 +1,245 @@
+{#
+ # -------------------------------------------------------------------------
+ # PimpMyGLPI plugin for GLPI
+ # -------------------------------------------------------------------------
+ # @copyright Copyright (C) 2026 LORENTZ Johan
+ # @license   GPL-3.0-or-later https://www.gnu.org/licenses/gpl-3.0.html
+ # @link      https://github.com/lorentzjohan
+ # -------------------------------------------------------------------------
+ #}
+
+{% extends 'layout/page_skeleton.html.twig' %}
+{% import 'components/form/fields_macros.html.twig' as fields %}
+
+{% set title = 'PimpMyGLPI' %}
+{% set menu = ['config', 'plugin'] %}
+{% set field_options = {'full_width': true} %}
+
+{% macro csrf(token) %}
+    {% if token is not empty %}
+        {# GLPI 11 only: GLPI 12 checks CSRF with request headers #}
+        <input type="hidden" name="_glpi_csrf_token" value="{{ token }}" />
+    {% endif %}
+{% endmacro %}
+
+{% macro preview(image, dark, remove_value) %}
+    {% if image is not null %}
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="pimpmyglpi-preview {{ dark ? 'pimpmyglpi-preview-dark' : '' }}">
+                <img src="{{ image.url }}" alt="" />
+            </div>
+            <div class="small text-muted">
+                {{ image.ext }}{% if image.width > 0 %} · {{ image.width }} × {{ image.height }} px{% endif %}
+                <label class="form-check mt-1 mb-0">
+                    <input class="form-check-input" type="checkbox" name="delete[]" value="{{ remove_value }}" />
+                    <span class="form-check-label">{{ __('Remove (back to GLPI default)', 'pimpmyglpi') }}</span>
+                </label>
+            </div>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro colorSetting(name, value, default, label, helper = '') %}
+    <div class="form-field row align-items-center col-12 glpi-full-width mb-2">
+        <label class="col-form-label col-xxl-5 text-xxl-end" for="{{ name }}_input">{{ label }}</label>
+        <div class="col-xxl-7 field-container d-flex align-items-center gap-3">
+            <label class="form-check form-switch mb-0">
+                <input type="hidden" name="{{ name }}_enabled" value="0" />
+                <input class="form-check-input" type="checkbox" name="{{ name }}_enabled" value="1" {{ value is not empty ? 'checked' : '' }} />
+            </label>
+            <input type="color" class="form-control form-control-color" id="{{ name }}_input" name="{{ name }}" value="{{ value is not empty ? value : default }}" />
+            {% if helper is not empty %}<span class="form-text m-0">{{ helper }}</span>{% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% block content %}
+<style>
+    .pimpmyglpi-preview { display: flex; align-items: center; justify-content: center; min-width: 120px; height: 72px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--tblr-border-color);
+        background-color: #fff; background-image: linear-gradient(45deg, #eef1f5 25%, transparent 25%), linear-gradient(-45deg, #eef1f5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eef1f5 75%), linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
+        background-size: 14px 14px; background-position: 0 0, 0 7px, 7px -7px, -7px 0; }
+    .pimpmyglpi-preview-dark { background: #2f3f64; }
+    .pimpmyglpi-preview img { max-height: 60px; max-width: 100%; }
+    .pimpmyglpi-examples img { max-height: 48px; max-width: 140px; }
+</style>
+<div class="container-xl">
+    <form name="pimpmyglpi_config" action="{{ form_url }}" method="post" enctype="multipart/form-data" data-track-changes="true">
+        {{ _self.csrf(csrf_token) }}
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h2 class="card-title"><i class="ti ti-sparkles me-2" aria-hidden="true"></i>PimpMyGLPI</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {{ fields.smallTitle(__('Identity', 'pimpmyglpi')) }}
+                    {{ fields.textField('app_name', settings.app_name, __('Application name', 'pimpmyglpi'), field_options|merge({
+                        placeholder: 'GLPI',
+                        helper: __('Replaces "GLPI" in the browser tab title, the two-factor authentication app label and the notification footer. Leave empty to keep GLPI.', 'pimpmyglpi'),
+                    })) }}
+
+                    {{ fields.smallTitle(__('Images', 'pimpmyglpi')) }}
+                    <div class="col-12 mb-3">
+                        <div class="row g-3">
+                            {% for item in global_slots %}
+                                <div class="col-md-6 col-xxl-4">
+                                    <div class="card h-100">
+                                        <div class="card-body d-flex flex-column">
+                                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                                                <h4 class="mb-1">{{ item.label }}</h4>
+                                                <span class="badge bg-secondary-lt">{{ item.formats }}</span>
+                                            </div>
+                                            <div class="text-muted small mb-2">{{ item.help }}</div>
+                                            {% set preview_dark = item.image is not null and item.image.tone is not empty ? item.image.tone == 'light' : item.dark %}
+                                            <div class="pimpmyglpi-preview {{ preview_dark ? 'pimpmyglpi-preview-dark' : '' }} mb-2">
+                                                {% if item.image is not null %}
+                                                    <img src="{{ item.image.url }}" alt="" />
+                                                {% elseif item.default is not null %}
+                                                    <img src="{{ base_path ~ item.default }}" alt="" class="opacity-75" />
+                                                {% else %}
+                                                    <span class="small text-muted">{{ __('None', 'pimpmyglpi') }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="small mb-2">
+                                                {% if item.image is not null %}
+                                                    <span class="badge bg-green-lt">{{ __('Custom', 'pimpmyglpi') }}</span>
+                                                    <span class="text-muted ms-1">{{ item.image.ext }}{% if item.image.width > 0 %} · {{ item.image.width }} × {{ item.image.height }} px{% endif %}</span>
+                                                    <label class="form-check mt-1 mb-0">
+                                                        <input class="form-check-input" type="checkbox" name="delete[]" value="{{ item.slot }}" />
+                                                        <span class="form-check-label">{{ __('Remove (back to GLPI default)', 'pimpmyglpi') }}</span>
+                                                    </label>
+                                                {% else %}
+                                                    <span class="badge bg-secondary-lt">{{ __('GLPI default', 'pimpmyglpi') }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <input type="file" class="form-control form-control-sm mt-auto" id="file_{{ item.slot }}" name="{{ item.slot }}" accept="{{ item.accept }}" aria-label="{{ item.label }}" />
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {{ fields.smallTitle(__('Logos by palette', 'pimpmyglpi')) }}
+                    <div class="col-12 mb-2 text-muted">
+                        {{ __('Replace the logos for one palette only, for example a dark logo for a palette with a light menu. Palette logos take priority over the logos above.', 'pimpmyglpi') }}
+                    </div>
+                    {% set palette_options = {} %}
+                    {% for key, palette in palettes %}
+                        {% set palette_options = palette_options|merge({(key): palette.name ~ (palette.dark ? ' (' ~ __('dark', 'pimpmyglpi') ~ ')' : '')}) %}
+                    {% endfor %}
+                    {{ fields.dropdownArrayField('palette_key', '', palette_options, __('Palette', 'pimpmyglpi'), field_options|merge({
+                        display_emptychoice: true,
+                    })) }}
+                    <div class="col-12 mb-2">
+                        <div class="row g-3">
+                            {% for logo in palette_logos %}
+                                <div class="col-md-4">
+                                    <label class="form-label" for="file_palette_{{ logo }}">{{ logo_labels[logo] }}</label>
+                                    <input type="file" class="form-control form-control-sm" id="file_palette_{{ logo }}" name="palette_{{ logo }}" accept="{{ logo_accept }}" />
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if palette_images|length > 0 %}
+                        <div class="col-12 mt-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm card-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ __('Palette', 'pimpmyglpi') }}</th>
+                                            {% for logo in palette_logos %}<th>{{ logo_labels[logo] }}</th>{% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in palette_images %}
+                                            <tr>
+                                                <td class="text-nowrap">{{ row.name }}</td>
+                                                {% for logo in palette_logos %}
+                                                    <td>
+                                                        {% if row.logos[logo] is not null %}
+                                                            {{ _self.preview(row.logos[logo], row.logos[logo].tone is not empty ? row.logos[logo].tone == 'light' : logo != 'logo_login', 'palette.' ~ row.key ~ '.' ~ logo) }}
+                                                        {% else %}
+                                                            <span class="text-muted">—</span>
+                                                        {% endif %}
+                                                    </td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {{ fields.smallTitle(__('Colors and style', 'pimpmyglpi')) }}
+                    {{ _self.colorSetting('primary_color', settings.primary_color, '#7c3aed', __('Main color', 'pimpmyglpi'), __('Buttons, selected items and highlights.', 'pimpmyglpi')) }}
+                    {{ _self.colorSetting('menu_color', settings.menu_color, '#2f3f64', __('Main menu background', 'pimpmyglpi'), __('The text color adapts automatically.', 'pimpmyglpi')) }}
+                    {{ fields.sliderField('colors_on_dark_palettes', settings.colors_on_dark_palettes, __('Apply these colors to dark palettes too', 'pimpmyglpi'), field_options) }}
+                    {{ fields.dropdownArrayField('radius', settings.radius, choices.radius, __('Corners', 'pimpmyglpi'), field_options) }}
+                    {{ fields.dropdownArrayField('font', settings.font, choices.font, __('Font', 'pimpmyglpi'), field_options) }}
+
+                    {{ fields.smallTitle(__('Login page', 'pimpmyglpi')) }}
+                    {{ _self.colorSetting('login_background_color', settings.login_background_color, '#1e1b4b', __('Background color', 'pimpmyglpi'), __('Used without a background image, or while it loads.', 'pimpmyglpi')) }}
+                    {{ fields.dropdownArrayField('login_card', settings.login_card, choices.login_card, __('Login box style', 'pimpmyglpi'), field_options) }}
+
+                    {{ fields.smallTitle(__('Palette', 'pimpmyglpi')) }}
+                    {% set forced_options = {'': __('No, users choose their palette', 'pimpmyglpi')}|merge(palette_options) %}
+                    {{ fields.dropdownArrayField('forced_palette', settings.forced_palette, forced_options, __('Force a palette for everyone', 'pimpmyglpi'), field_options|merge({
+                        helper: __('Applies to every user and to the login page. The palette chosen in personal preferences is ignored.', 'pimpmyglpi'),
+                    })) }}
+
+                    {{ fields.smallTitle(__('Custom CSS', 'pimpmyglpi')) }}
+                    {{ fields.textareaField('custom_css', settings.custom_css, __('CSS rules', 'pimpmyglpi'), field_options|merge({
+                        rows: 8,
+                        helper: __('Added after all the GLPI styles, on every page including the login page.', 'pimpmyglpi'),
+                        input_addclass: 'font-monospace',
+                    })) }}
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center">
+                {% if upload_limit is not empty %}
+                    <span class="text-muted small">{{ __('Maximum upload size of the server: %s', 'pimpmyglpi')|format(upload_limit) }}</span>
+                {% endif %}
+                <button type="submit" name="update" value="1" class="ms-auto btn btn-primary">
+                    <i class="ti ti-device-floppy" aria-hidden="true"></i>
+                    <span>{{ _x('button', 'Save') }}</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title"><i class="ti ti-photo me-2" aria-hidden="true"></i>{{ __('Example images', 'pimpmyglpi') }}</h3>
+        </div>
+        <div class="card-body">
+            <p>{{ __('Ready-made images in the GLPI formats, to try the plugin or to use as templates (SVG sources included in the plugin).', 'pimpmyglpi') }}</p>
+            <div class="d-flex flex-wrap gap-3 pimpmyglpi-examples mb-3">
+                {% for file in examples %}
+                    <a href="{{ examples_url ~ file }}" download class="text-center small text-decoration-none">
+                        <div class="pimpmyglpi-preview {{ 'white' in file ? 'pimpmyglpi-preview-dark' : '' }}"><img src="{{ examples_url ~ file }}" alt="" /></div>
+                        <span class="d-block mt-1">{{ file }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <form action="{{ form_url }}/examples" method="post">
+                    {{ _self.csrf(csrf_token) }}
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="ti ti-wand" aria-hidden="true"></i>
+                        <span>{{ __('Apply the example images', 'pimpmyglpi') }}</span>
+                    </button>
+                </form>
+                <form action="{{ form_url }}/reset" method="post" onsubmit="return confirm({{ __('Remove every customization and restore the GLPI appearance?', 'pimpmyglpi')|json_encode|e('html_attr') }});">
+                    {{ _self.csrf(csrf_token) }}
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="ti ti-restore" aria-hidden="true"></i>
+                        <span>{{ __('Restore the GLPI appearance', 'pimpmyglpi') }}</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

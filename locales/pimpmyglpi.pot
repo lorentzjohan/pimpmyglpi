@@ -1,0 +1,243 @@
+# PimpMyGLPI plugin for GLPI
+# Copyright (C) 2026 LORENTZ Johan
+# This file is distributed under the GNU General Public License v3 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: pimpmyglpi 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: 2026-10-29 00:00+0000\n"
+"Last-Translator: LORENTZ Johan\n"
+"Language-Team: LORENTZ Johan\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+msgid "Unknown palette."
+msgstr ""
+
+msgid "Invalid value."
+msgstr ""
+
+msgid "Invalid color: use the #RRGGBB format."
+msgstr ""
+
+#, php-format
+msgid "The custom CSS is too long: %d characters at most."
+msgstr ""
+
+msgid "Choose the palette the logos are for."
+msgstr ""
+
+#, php-format
+msgid "%1$s: the upload failed (%2$s)."
+msgstr ""
+
+msgid "Nothing was saved."
+msgstr ""
+
+msgid "Settings saved"
+msgstr ""
+
+msgid "The example images are applied."
+msgstr ""
+
+msgid "GLPI appearance restored."
+msgstr ""
+
+msgid "The changes could not be saved: check that GLPI can write in its files directory."
+msgstr ""
+
+msgid "Favicon"
+msgstr ""
+
+msgid "Icon of the browser tab. Square, 32 × 32 px or more."
+msgstr ""
+
+msgid "Main menu logo"
+msgstr ""
+
+msgid "GLPI format: 100 × 55 px (250 × 138 px for sharp screens). Light logo, the menu is dark."
+msgstr ""
+
+msgid "Collapsed menu logo"
+msgstr ""
+
+msgid "Shown when the menu is collapsed. Square, GLPI format: 53 × 53 px."
+msgstr ""
+
+msgid "Login page logo"
+msgstr ""
+
+msgid "GLPI format: 250 × 138 px. Dark logo for light palettes, or a light logo on a dark background image."
+msgstr ""
+
+msgid "Login page logo (dark palettes)"
+msgstr ""
+
+msgid "Used when the default palette is dark. Light logo, 250 × 138 px. Falls back to the logo above."
+msgstr ""
+
+msgid "Login page background"
+msgstr ""
+
+msgid "Covers the whole page. 1920 × 1080 px recommended."
+msgstr ""
+
+msgid "GLPI default"
+msgstr ""
+
+msgid "Square"
+msgstr ""
+
+msgid "Rounded"
+msgstr ""
+
+msgid "GLPI default (Inter)"
+msgstr ""
+
+msgid "Operating system font"
+msgstr ""
+
+msgid "Frosted glass"
+msgstr ""
+
+msgid "file too large for the server"
+msgstr ""
+
+msgid "file partially received"
+msgstr ""
+
+msgid "server error"
+msgstr ""
+
+msgid "The file could not be read."
+msgstr ""
+
+msgid "The file is empty."
+msgstr ""
+
+#, php-format
+msgid "The file is too large: %s at most."
+msgstr ""
+
+msgid "This SVG file contains elements that are not allowed (scripts, external links or entities)."
+msgstr ""
+
+#, php-format
+msgid "Unsupported file type. Accepted formats: %s."
+msgstr ""
+
+msgid "The image could not be read."
+msgstr ""
+
+#, php-format
+msgid "The image is too large: %d px at most per side."
+msgstr ""
+
+msgid "Remove (back to GLPI default)"
+msgstr ""
+
+msgid "Identity"
+msgstr ""
+
+msgid "Application name"
+msgstr ""
+
+msgid "Replaces \"GLPI\" in the browser tab title, the two-factor authentication app label and the notification footer. Leave empty to keep GLPI."
+msgstr ""
+
+msgid "Images"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Custom"
+msgstr ""
+
+msgid "Logos by palette"
+msgstr ""
+
+msgid "Replace the logos for one palette only, for example a dark logo for a palette with a light menu. Palette logos take priority over the logos above."
+msgstr ""
+
+msgid "dark"
+msgstr ""
+
+msgid "Palette"
+msgstr ""
+
+msgid "Colors and style"
+msgstr ""
+
+msgid "Main color"
+msgstr ""
+
+msgid "Buttons, selected items and highlights."
+msgstr ""
+
+msgid "Main menu background"
+msgstr ""
+
+msgid "The text color adapts automatically."
+msgstr ""
+
+msgid "Apply these colors to dark palettes too"
+msgstr ""
+
+msgid "Corners"
+msgstr ""
+
+msgid "Font"
+msgstr ""
+
+msgid "Login page"
+msgstr ""
+
+msgid "Background color"
+msgstr ""
+
+msgid "Used without a background image, or while it loads."
+msgstr ""
+
+msgid "Login box style"
+msgstr ""
+
+msgid "No, users choose their palette"
+msgstr ""
+
+msgid "Force a palette for everyone"
+msgstr ""
+
+msgid "Applies to every user and to the login page. The palette chosen in personal preferences is ignored."
+msgstr ""
+
+msgid "Custom CSS"
+msgstr ""
+
+msgid "CSS rules"
+msgstr ""
+
+msgid "Added after all the GLPI styles, on every page including the login page."
+msgstr ""
+
+#, php-format
+msgid "Maximum upload size of the server: %s"
+msgstr ""
+
+msgid "Example images"
+msgstr ""
+
+msgid "Ready-made images in the GLPI formats, to try the plugin or to use as templates (SVG sources included in the plugin)."
+msgstr ""
+
+msgid "Apply the example images"
+msgstr ""
+
+msgid "Remove every customization and restore the GLPI appearance?"
+msgstr ""
+
+msgid "Restore the GLPI appearance"
+msgstr ""

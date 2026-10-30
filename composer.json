@@ -1,0 +1,33 @@
+{
+    "name": "lorentzjohan/pimpmyglpi",
+    "description": "GLPI plugin: give GLPI your own look (name, favicon, logos, colors, login page, custom CSS).",
+    "type": "glpi-plugin",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "LORENTZ Johan",
+            "homepage": "https://github.com/lorentzjohan"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "ext-fileinfo": "*",
+        "ext-simplexml": "*"
+    },
+    "suggest": {
+        "ext-gd": "Detects whether a logo is light or dark, for the previews of the configuration page."
+    },
+    "config": {
+        "autoloader-suffix": "PluginPimpmyglpi",
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.2.99"
+        },
+        "sort-packages": true
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GlpiPlugin\\Pimpmyglpi\\Tests\\": "tests/"
+        }
+    }
+}

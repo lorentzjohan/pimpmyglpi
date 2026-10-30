@@ -1,0 +1,41 @@
+<root>
+   <name>PimpMyGLPI</name>
+   <key>pimpmyglpi</key>
+   <state>stable</state>
+   <logo></logo>
+   <description>
+      <short>
+         <en>Give GLPI your own look: name, favicon, logos (also per palette), colors, login page and custom CSS.</en>
+      </short>
+      <long>
+         <en>Customize what users see in GLPI without modifying any GLPI file: application name in the browser tab, favicon, main menu, collapsed menu and login page logos, logos for a single palette, main and menu colors, corners, font, login page background and frosted glass login box, a palette forced for everyone and custom CSS. Example logos in the GLPI formats are included.</en>
+      </long>
+   </description>
+   <homepage>https://github.com/lorentzjohan</homepage>
+   <download></download>
+   <issues></issues>
+   <readme></readme>
+   <authors>
+      <author>LORENTZ Johan</author>
+   </authors>
+   <versions>
+      <version>
+         <num>1.0.0</num>
+         <compatibility>~11.0</compatibility>
+         <compatibility>~12.0</compatibility>
+      </version>
+   </versions>
+   <langs>
+      <lang>en_GB</lang>
+      <lang>fr_FR</lang>
+   </langs>
+   <license>GPL-3.0-or-later</license>
+   <tags>
+      <en>
+         <tag>Branding</tag>
+         <tag>Customization</tag>
+         <tag>Logo</tag>
+         <tag>Theme</tag>
+      </en>
+   </tags>
+</root>
