@@ -16,7 +16,9 @@
 
 Give GLPI your own look: application name, favicon, logos (also per palette), colors, login page and custom CSS.
 
-- Version: 1.1.1
+<p align="center"><img src="docs/screenshots/login-page.png" alt="GLPI login page customized with PimpMyGLPI: background image, logo and frosted glass login box" width="900"></p>
+
+- Version: 1.1.2
 - Author: [lorentzjohan (LORENTZ Johan)](https://github.com/lorentzjohan)
 - License: GPL-3.0-or-later
 - Compatibility: GLPI 11.x and 12.x (tested on 11.0.12 and 12.0.1), PHP 8.2 to 8.5 (8.3 minimum with GLPI 12)
@@ -70,6 +72,13 @@ find /var/lib/glpi/_plugins/pimpmyglpi -type d -exec chmod 0750 {} +
 ```
 
 ## Configuration
+
+<details>
+<summary><strong>Screenshot of the configuration page</strong></summary>
+
+<p align="center"><img src="docs/screenshots/configuration.png" alt="PimpMyGLPI configuration page" width="800"></p>
+
+</details>
 
 Open **Setup > Plugins > PimpMyGLPI > Configure** (URL: `/plugins/pimpmyglpi/config`). The page requires the update right on the general setup. On GLPI 12, it also requires a recent re-authentication, like the other setup pages.
 
@@ -152,6 +161,7 @@ locales/                             Translations (en_GB, fr_FR) and pimpmyglpi.
 tests/Units/                         Unit tests (PHPUnit)
 tests/Integration/                   Integration tests inside GLPI, on its test database (PHPUnit)
 .github/workflows/                   Continuous integration on GLPI 11 and 12
+docs/screenshots/                    Screenshots of this README
 ```
 
 ## Support the project

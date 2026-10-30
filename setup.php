@@ -30,7 +30,7 @@ use Glpi\Plugin\Hooks;
 use GlpiPlugin\Pimpmyglpi\Runtime;
 
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
-define('PLUGIN_PIMPMYGLPI_VERSION', '1.1.1');
+define('PLUGIN_PIMPMYGLPI_VERSION', '1.1.2');
 
 // Minimal GLPI version, inclusive: GLPI 11.x
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */

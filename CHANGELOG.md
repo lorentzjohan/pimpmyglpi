@@ -1,9 +1,14 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.2] - 2026-10-30
 
 ### Changed
 - Continuous integration: the GLPI reusable workflows are pinned to a full commit SHA (supply chain security), and Dependabot proposes their updates.
+- Release archives built with `git archive` no longer contain the development files (`.gitattributes` export-ignore).
+- SonarCloud analysis configuration (`.sonarcloud.properties`): sources and tests are told apart.
+
+### Documentation
+- Screenshots of a customized login page and of the configuration page.
 
 ## [1.1.1] - 2026-10-30
 
