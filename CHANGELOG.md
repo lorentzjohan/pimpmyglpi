@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- Continuous integration: the GLPI reusable workflows are pinned to a full commit SHA (supply chain security), and Dependabot proposes their updates.
+
 ## [1.1.1] - 2026-10-30
 
 ### Security

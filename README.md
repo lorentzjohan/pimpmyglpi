@@ -1,20 +1,20 @@
 <div align="center">
 
-# PimpMyGLPI — GLPI 11 / 12 plugin
-
 [![Continuous integration](https://github.com/lorentzjohan/pimpmyglpi/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/lorentzjohan/pimpmyglpi/actions/workflows/continuous-integration.yml)
 [![Latest release](https://img.shields.io/github/v/release/lorentzjohan/pimpmyglpi?sort=semver&label=release)](https://github.com/lorentzjohan/pimpmyglpi/releases/latest)
 [![License: GPL v3+](https://img.shields.io/github/license/lorentzjohan/pimpmyglpi)](LICENSE)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lorentzjohan_pimpmyglpi&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=lorentzjohan_pimpmyglpi)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=lorentzjohan_pimpmyglpi&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=lorentzjohan_pimpmyglpi)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=lorentzjohan_pimpmyglpi&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=lorentzjohan_pimpmyglpi)
+
 [![GLPI 11 | 12](https://img.shields.io/badge/GLPI-11.x%20%7C%2012.x-blue)](https://glpi-project.org)
 [![PHP 8.2 to 8.5](https://img.shields.io/badge/PHP-8.2%20to%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/supported-versions.php)
-[![PHPStan: level max](https://img.shields.io/badge/PHPStan-level%20max-brightgreen)](phpstan.neon)
-[![Psalm: taint analysis](https://img.shields.io/badge/Psalm-taint%20analysis-brightgreen)](psalm.xml)
-[![Code style: PHP-CS-Fixer](https://img.shields.io/badge/code%20style-PHP--CS--Fixer-brightgreen)](.php-cs-fixer.php)
-[![Languages: EN | FR](https://img.shields.io/badge/languages-EN%20%7C%20FR-informational)](locales)
-
-Give GLPI your own look: application name, favicon, logos (also per palette), colors, login page and custom CSS.
 
 </div>
+
+# PimpMyGLPI — GLPI 11 / 12 plugin
+
+Give GLPI your own look: application name, favicon, logos (also per palette), colors, login page and custom CSS.
 
 - Version: 1.1.1
 - Author: [lorentzjohan (LORENTZ Johan)](https://github.com/lorentzjohan)
