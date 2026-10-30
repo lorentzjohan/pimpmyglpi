@@ -76,11 +76,13 @@
         var originalPreview = preview.innerHTML;
         var objectUrl = null;
 
-        var formats = (zone.getAttribute('data-formats') || '').toLowerCase().split(/\s*,\s*/).filter(Boolean);
+        var formats = (zone.getAttribute('data-formats') || '').toLowerCase().split(',').map(function (format) {
+            return format.trim();
+        }).filter(Boolean);
         if (formats.indexOf('jpg') !== -1) {
             formats.push('jpeg');
         }
-        var maxSize = parseInt(zone.getAttribute('data-max-size'), 10) || 0;
+        var maxSize = Number.parseInt(zone.getAttribute('data-max-size'), 10) || 0;
 
         function reset() {
             if (objectUrl) {
