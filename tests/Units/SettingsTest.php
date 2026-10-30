@@ -82,7 +82,7 @@ final class SettingsTest extends TestCase
         $image = ['ext' => 'png', 'mime' => 'image/png', 'hash' => 'abcdef0123456789', 'width' => 250, 'height' => 138, 'tone' => 'dark'];
         $css   = ThemeCompiler::buildCss(
             Settings::fromArray([Settings::PRIMARY_COLOR => '#7c3aed', Settings::RADIUS => 'square']),
-            ['logo_menu' => $image, 'palette.auror.logo_login' => $image]
+            ['logo_menu' => $image, 'palette.auror.logo_login' => $image],
         );
         $this->assertStringContainsString('--glpi-logo: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_menu?h=abcdef0123456789")', $css);
         $this->assertStringContainsString(':root[data-glpi-theme="auror"]', $css);
@@ -94,7 +94,7 @@ final class SettingsTest extends TestCase
     /**
      * @return array{ext: string, mime: string, hash: string, width: int, height: int, tone: string}
      */
-    private static function image(string $hash, string $tone = ''): array
+    private function image(string $hash, string $tone = ''): array
     {
         return ['ext' => 'png', 'mime' => 'image/png', 'hash' => $hash, 'width' => 250, 'height' => 138, 'tone' => $tone];
     }
@@ -102,8 +102,8 @@ final class SettingsTest extends TestCase
     public function testLoginLogoFollowsTheBackground(): void
     {
         $logos = [
-            ImageSlots::LOGO_LOGIN      => self::image('aaaaaaaaaaaaaaaa'),
-            ImageSlots::LOGO_LOGIN_DARK => self::image('bbbbbbbbbbbbbbbb'),
+            ImageSlots::LOGO_LOGIN      => $this->image('aaaaaaaaaaaaaaaa'),
+            ImageSlots::LOGO_LOGIN_DARK => $this->image('bbbbbbbbbbbbbbbb'),
         ];
 
         // No background set by the plugin: GLPI's palette-based choice.
@@ -112,7 +112,7 @@ final class SettingsTest extends TestCase
         $this->assertStringContainsString('--glpi-logo-light-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login_dark?h=bbbbbbbbbbbbbbbb")', $css);
 
         // Dark background image: the logo for a dark background everywhere.
-        $images = $logos + [ImageSlots::LOGIN_BACKGROUND => self::image('cccccccccccccccc', 'dark')];
+        $images = $logos + [ImageSlots::LOGIN_BACKGROUND => $this->image('cccccccccccccccc', 'dark')];
         $this->assertSame('dark', ThemeCompiler::getLoginBackgroundTone(Settings::fromArray([]), $images));
         $css = ThemeCompiler::buildCss(Settings::fromArray([]), $images);
         $this->assertStringContainsString('--glpi-logo-dark-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login_dark?h=bbbbbbbbbbbbbbbb")', $css);
@@ -126,7 +126,7 @@ final class SettingsTest extends TestCase
         $this->assertStringNotContainsString('asset/logo_login_dark?h=', $css);
 
         // A single variant is used for both backgrounds.
-        $css = ThemeCompiler::buildCss(Settings::fromArray([]), [ImageSlots::LOGO_LOGIN_DARK => self::image('bbbbbbbbbbbbbbbb')]);
+        $css = ThemeCompiler::buildCss(Settings::fromArray([]), [ImageSlots::LOGO_LOGIN_DARK => $this->image('bbbbbbbbbbbbbbbb')]);
         $this->assertStringContainsString('--glpi-logo-dark-login: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_login_dark?h=bbbbbbbbbbbbbbbb")', $css);
     }
 
@@ -135,8 +135,8 @@ final class SettingsTest extends TestCase
         $settings = Settings::fromArray([Settings::MENU_COLOR => '#e2e8f0']);
 
         $css = ThemeCompiler::buildCss($settings, [
-            ImageSlots::LOGO_MENU       => self::image('aaaaaaaaaaaaaaaa'),
-            ImageSlots::LOGO_MENU_LIGHT => self::image('dddddddddddddddd'),
+            ImageSlots::LOGO_MENU       => $this->image('aaaaaaaaaaaaaaaa'),
+            ImageSlots::LOGO_MENU_LIGHT => $this->image('dddddddddddddddd'),
         ]);
         $this->assertStringContainsString(':root[data-glpi-theme-dark="0"] {' . "\n" . '    --glpi-logo: url("' . ThemeCompiler::BASE_PATH_PLACEHOLDER . '/plugins/pimpmyglpi/asset/logo_menu_light?h=dddddddddddddddd")', $css);
 

@@ -29,9 +29,18 @@
 namespace GlpiPlugin\Pimpmyglpi;
 
 use RuntimeException;
+use SimpleXMLElement;
 use Throwable;
 
+use function Safe\filesize;
+use function Safe\getimagesize;
+use function Safe\glob;
+use function Safe\hash_file;
+use function Safe\imagecolorat;
+use function Safe\imagecreatefromstring;
 use function Safe\preg_match;
+use function Safe\simplexml_load_string;
+use function Safe\unpack;
 
 /**
  * Validation and storage of the uploaded images.
@@ -79,14 +88,16 @@ final class ImageStore
         if (!is_file($path) || !is_readable($path)) {
             throw new ImageValidationException(__('The file could not be read.', 'pimpmyglpi'));
         }
-        $size = (int) filesize($path);
+
+        $size = filesize($path);
         if ($size <= 0) {
             throw new ImageValidationException(__('The file is empty.', 'pimpmyglpi'));
         }
+
         if ($size > $definition['max_size']) {
             throw new ImageValidationException(sprintf(
                 __('The file is too large: %s at most.', 'pimpmyglpi'),
-                self::formatSize($definition['max_size'])
+                self::formatSize($definition['max_size']),
             ));
         }
 
@@ -94,10 +105,11 @@ final class ImageStore
         if ($ext === null && self::looksLikeSvg($path)) {
             throw new ImageValidationException(__('This SVG file contains elements that are not allowed (scripts, external links or entities).', 'pimpmyglpi'));
         }
+
         if ($ext === null || !in_array($ext, $definition['types'], true)) {
             throw new ImageValidationException(sprintf(
                 __('Unsupported file type. Accepted formats: %s.', 'pimpmyglpi'),
-                strtoupper(implode(', ', $definition['types']))
+                strtoupper(implode(', ', $definition['types'])),
             ));
         }
 
@@ -105,10 +117,11 @@ final class ImageStore
         if ($ext !== 'svg' && ($width < 1 || $height < 1)) {
             throw new ImageValidationException(__('The image could not be read.', 'pimpmyglpi'));
         }
+
         if ($width > $definition['max_px'] || $height > $definition['max_px']) {
             throw new ImageValidationException(sprintf(
                 __('The image is too large: %d px at most per side.', 'pimpmyglpi'),
-                $definition['max_px']
+                $definition['max_px'],
             ));
         }
 
@@ -124,30 +137,20 @@ final class ImageStore
      */
     public static function store(string $slot, string $source, array $validated): array
     {
-        self::ensureDirectory();
-
         $target = self::getPath($slot, $validated['ext']);
-        $tmp    = $target . '.tmp' . bin2hex(random_bytes(4));
-        if (!@copy($source, $tmp)) {
-            throw new RuntimeException(sprintf('Unable to write "%s".', $tmp));
-        }
-        @chmod($tmp, 0644);
-        if (!@rename($tmp, $target)) {
-            @unlink($tmp);
-            throw new RuntimeException(sprintf('Unable to write "%s".', $target));
-        }
+        Filesystem::copy($source, $target);
 
         // A slot holds a single file: remove a previous one stored with another extension.
         foreach (array_keys(self::MIME_TYPES) as $ext) {
             if ($ext !== $validated['ext']) {
-                @unlink(self::getPath($slot, $ext));
+                Filesystem::remove(self::getPath($slot, $ext));
             }
         }
 
         return [
             'ext'    => $validated['ext'],
             'mime'   => self::MIME_TYPES[$validated['ext']],
-            'hash'   => substr((string) sha1_file($target), 0, 16),
+            'hash'   => substr(hash_file('sha256', $target), 0, 16),
             'width'  => $validated['width'],
             'height' => $validated['height'],
             'tone'   => self::getTone($target, $validated['ext']),
@@ -163,8 +166,10 @@ final class ImageStore
         if (!in_array($ext, ['png', 'jpg', 'webp'], true) || !function_exists('imagecreatefromstring')) {
             return '';
         }
-        $image = @imagecreatefromstring((string) file_get_contents($path));
-        if ($image === false) {
+
+        try {
+            $image = imagecreatefromstring(Filesystem::read($path));
+        } catch (Throwable) {
             return '';
         }
 
@@ -180,10 +185,12 @@ final class ImageStore
                 if ($alpha < 0.5) {
                     continue;
                 }
+
                 $sum += (0.2126 * $rgba['red'] + 0.7152 * $rgba['green'] + 0.0722 * $rgba['blue']) / 255;
                 $count++;
             }
         }
+
         unset($image);
 
         return $count === 0 ? '' : ($sum / $count > 0.6 ? 'light' : 'dark');
@@ -192,15 +199,19 @@ final class ImageStore
     public static function delete(string $slot): void
     {
         foreach (array_keys(self::MIME_TYPES) as $ext) {
-            @unlink(self::getPath($slot, $ext));
+            Filesystem::remove(self::getPath($slot, $ext));
         }
     }
 
     public static function deleteAll(): void
     {
-        foreach (glob(self::getDirectory() . '/*') ?: [] as $file) {
-            if (is_file($file)) {
-                @unlink($file);
+        if (!is_dir(self::getDirectory())) {
+            return;
+        }
+
+        foreach (glob(self::getDirectory() . '/*') as $file) {
+            if (is_string($file)) {
+                Filesystem::remove($file);
             }
         }
     }
@@ -240,8 +251,8 @@ final class ImageStore
         // Must be well-formed XML with an <svg> root.
         $previous = libxml_use_internal_errors(true);
         try {
-            $xml = simplexml_load_string($content, \SimpleXMLElement::class, LIBXML_NONET);
-            $ok  = $xml !== false && strtolower($xml->getName()) === 'svg';
+            $xml = simplexml_load_string($content, SimpleXMLElement::class, LIBXML_NONET);
+            $ok  = strtolower($xml->getName()) === 'svg';
         } catch (Throwable) {
             $ok = false;
         } finally {
@@ -257,14 +268,15 @@ final class ImageStore
      */
     private static function detectType(string $path): ?string
     {
-        $handle = fopen($path, 'rb');
-        if ($handle === false) {
-            return null;
-        }
-        $head = (string) fread($handle, 16);
-        fclose($handle);
+        $head = Filesystem::read($path, 16);
 
-        $raster = @getimagesize($path);
+        try {
+            $raster = getimagesize($path);
+        } catch (Throwable) {
+            // Not a raster image
+            $raster = null;
+        }
+
         if (is_array($raster)) {
             $type = match ($raster[2]) {
                 IMAGETYPE_PNG  => 'png',
@@ -282,7 +294,7 @@ final class ImageStore
             return 'ico';
         }
 
-        if (self::looksLikeSvg($path) && self::isSafeSvg((string) file_get_contents($path))) {
+        if (self::looksLikeSvg($path) && self::isSafeSvg(Filesystem::read($path))) {
             return 'svg';
         }
 
@@ -291,7 +303,7 @@ final class ImageStore
 
     private static function looksLikeSvg(string $path): bool
     {
-        $content = (string) file_get_contents($path, false, null, 0, 4096);
+        $content = Filesystem::read($path, 4096);
 
         return preg_match('/^\s*(<\?xml[^>]*>\s*)?(<!--.*?-->\s*)*(<!DOCTYPE[^>]*(\[.*?\])?\s*>\s*)?<svg[\s>]/is', $content) === 1;
     }
@@ -304,11 +316,13 @@ final class ImageStore
         if ($ext === 'svg') {
             return [0, 0];
         }
+
         if ($ext === 'ico') {
             // Largest of the icons stored in the file (directory entries of 16 bytes after a 6-byte header).
-            $data  = (string) file_get_contents($path, false, null, 0, 6 + 16 * 64);
-            $count = strlen($data) >= 6 ? unpack('v', substr($data, 4, 2))[1] : 0;
-            $width = $height = 0;
+            $data  = Filesystem::read($path, 6 + 16 * 64);
+            $count = strlen($data) >= 6 ? Scalar::toInt(unpack('v', substr($data, 4, 2))[1] ?? 0) : 0;
+            $width = 0;
+            $height = 0;
             for ($i = 0; $i < min($count, 64) && strlen($data) >= 6 + 16 * ($i + 1); $i++) {
                 $entry_width  = ord($data[6 + 16 * $i]) ?: 256;
                 $entry_height = ord($data[7 + 16 * $i]) ?: 256;
@@ -320,18 +334,15 @@ final class ImageStore
             return [$width, $height];
         }
 
-        $info = @getimagesize($path);
-
-        return is_array($info) ? [(int) $info[0], (int) $info[1]] : [0, 0];
-    }
-
-    private static function ensureDirectory(): void
-    {
-        $directory = self::getDirectory();
-        if (!is_dir($directory) && !@mkdir($directory, 0755, true) && !is_dir($directory)) {
-            throw new RuntimeException(sprintf('Unable to create "%s".', $directory));
+        try {
+            $info = getimagesize($path);
+        } catch (Throwable) {
+            return [0, 0];
         }
+
+        return is_array($info) ? [Scalar::toInt($info[0]), Scalar::toInt($info[1])] : [0, 0];
     }
+
 
     private static function formatSize(int $bytes): string
     {

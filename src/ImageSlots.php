@@ -28,6 +28,8 @@
 
 namespace GlpiPlugin\Pimpmyglpi;
 
+use InvalidArgumentException;
+
 use function Safe\preg_match;
 
 /**
@@ -38,16 +40,23 @@ use function Safe\preg_match;
 final class ImageSlots
 {
     public const FAVICON           = 'favicon';
+
     /** Main menu logo for dark menus (light logo): GLPI menus are dark, this is the default one. */
     public const LOGO_MENU               = 'logo_menu';
+
     /** Main menu logo for light menus (dark logo): used when the main menu color is light. */
     public const LOGO_MENU_LIGHT         = 'logo_menu_light';
+
     public const LOGO_MENU_REDUCED       = 'logo_menu_reduced';
+
     public const LOGO_MENU_REDUCED_LIGHT = 'logo_menu_reduced_light';
+
     /** Login page logo for a light background (dark logo). */
     public const LOGO_LOGIN              = 'logo_login';
+
     /** Login page logo for a dark background (light logo). */
     public const LOGO_LOGIN_DARK         = 'logo_login_dark';
+
     public const LOGIN_BACKGROUND        = 'login_background';
 
     /** Logos that can be replaced for a single palette. */
@@ -92,8 +101,10 @@ final class ImageSlots
         if (isset(self::DEFINITIONS[$slot])) {
             return ['base' => $slot, 'palette' => null];
         }
+
         if (
             preg_match('/^palette\.([a-z0-9_-]{1,64})\.([a-z_]+)$/', $slot, $matches) === 1
+            && isset($matches[1], $matches[2])
             && in_array($matches[2], self::PALETTE_LOGOS, true)
         ) {
             return ['base' => $matches[2], 'palette' => $matches[1]];
@@ -119,7 +130,7 @@ final class ImageSlots
     {
         $parsed = self::parse($slot);
         if ($parsed === null) {
-            throw new \InvalidArgumentException(sprintf('Unknown image slot "%s".', $slot));
+            throw new InvalidArgumentException(sprintf('Unknown image slot "%s".', $slot));
         }
 
         return self::DEFINITIONS[$parsed['base']];
@@ -132,7 +143,7 @@ final class ImageSlots
     {
         return implode(',', array_map(
             static fn(string $ext): string => '.' . $ext . ($ext === 'jpg' ? ',.jpeg' : ''),
-            self::getDefinition($slot)['types']
+            self::getDefinition($slot)['types'],
         ));
     }
 }

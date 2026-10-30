@@ -28,9 +28,10 @@
 
 namespace GlpiPlugin\Pimpmyglpi;
 
+use DBmysql;
 use Glpi\Plugin\Hooks;
+use Glpi\UI\Theme;
 use Glpi\UI\ThemeManager;
-use JsonException;
 use Throwable;
 
 /**
@@ -59,11 +60,11 @@ final class Runtime
 
             self::applyForcedPalette($runtime);
             self::registerAssets($runtime);
-        } catch (Throwable $e) {
+        } catch (Throwable $throwable) {
             global $PHPLOGGER;
             $PHPLOGGER->error(
-                sprintf('PimpMyGLPI: customization skipped after an unexpected error: %s', $e->getMessage()),
-                ['exception' => $e]
+                sprintf('PimpMyGLPI: customization skipped after an unexpected error: %s', $throwable->getMessage()),
+                ['exception' => $throwable],
             );
         }
     }
@@ -82,7 +83,12 @@ final class Runtime
         $data = self::read();
         if ($data === null) {
             global $DB;
-            $data = ($DB !== null && $DB->connected) ? ThemeCompiler::compile(Settings::load()) : [];
+            // Compiled by the web server user only: the console may run as another user (root),
+            // whose files the web server could not read. $DB is not set yet while GLPI itself
+            // is being installed.
+            // @phpstan-ignore instanceof.alwaysTrue
+            $can_compile = !isCommandLine() && $DB instanceof DBmysql && $DB->connected;
+            $data        = $can_compile ? ThemeCompiler::compile(Settings::load()) : [];
         }
 
         return self::$data = $data;
@@ -98,16 +104,35 @@ final class Runtime
      */
     public static function getImage(string $slot): ?array
     {
-        $image = self::get()['images'][$slot] ?? null;
+        $images = self::get()['images'] ?? null;
+        $image  = is_array($images) ? ($images[$slot] ?? null) : null;
+        if (!is_array($image)) {
+            return null;
+        }
 
-        return is_array($image) ? $image : null;
+        $ext  = Scalar::toString($image['ext'] ?? '');
+        $hash = Scalar::toString($image['hash'] ?? '');
+        if (!isset(ImageStore::MIME_TYPES[$ext]) || $hash === '') {
+            return null;
+        }
+
+        return ['ext' => $ext, 'mime' => ImageStore::MIME_TYPES[$ext], 'hash' => $hash];
+    }
+
+    /**
+     * A string value of the runtime data ("" when missing).
+     */
+    public static function getString(string $key): string
+    {
+        return Scalar::toString(self::get()[$key] ?? '');
     }
 
     public static function getAssetUrl(string $slot, string $hash): string
     {
+        /** @var array<string, mixed> $CFG_GLPI */
         global $CFG_GLPI;
 
-        return ($CFG_GLPI['root_doc'] ?? '') . '/plugins/pimpmyglpi/asset/' . rawurlencode($slot) . '?h=' . rawurlencode($hash);
+        return Scalar::toString($CFG_GLPI['root_doc'] ?? '') . '/plugins/pimpmyglpi/asset/' . rawurlencode($slot) . '?h=' . rawurlencode($hash);
     }
 
     /**
@@ -119,13 +144,25 @@ final class Runtime
         if (!is_file($path)) {
             return null;
         }
+
         try {
-            $data = json_decode((string) file_get_contents($path), true, 8, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
+            $data = json_decode(Filesystem::read($path), true, 8, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
             return null;
         }
 
-        return is_array($data) && ($data['version'] ?? null) === ThemeCompiler::RUNTIME_VERSION ? $data : null;
+        if (!is_array($data) || ($data['version'] ?? null) !== ThemeCompiler::RUNTIME_VERSION) {
+            return null;
+        }
+
+        $runtime = [];
+        foreach ($data as $key => $value) {
+            if (is_string($key)) {
+                $runtime[$key] = $value;
+            }
+        }
+
+        return $runtime;
     }
 
     /**
@@ -135,6 +172,7 @@ final class Runtime
      */
     private static function applyAppName(array $runtime): void
     {
+        /** @var array<string, mixed> $CFG_GLPI */
         global $CFG_GLPI;
 
         $app_name = $runtime['app_name'] ?? '';
@@ -152,7 +190,8 @@ final class Runtime
         if (!is_string($palette) || $palette === '' || session_status() !== PHP_SESSION_ACTIVE) {
             return;
         }
-        if (ThemeManager::getInstance()->getTheme($palette) !== null) {
+
+        if (ThemeManager::getInstance()->getTheme($palette) instanceof Theme) {
             $_SESSION['glpipalette'] = $palette;
         }
     }
@@ -162,6 +201,7 @@ final class Runtime
      */
     private static function registerAssets(array $runtime): void
     {
+        /** @var array<string, array<string, mixed>> $PLUGIN_HOOKS */
         global $PLUGIN_HOOKS;
 
         $css_hash = $runtime['css'] ?? '';

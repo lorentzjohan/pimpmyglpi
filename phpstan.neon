@@ -1,0 +1,20 @@
+includes:
+    - ../../vendor/glpi-project/phpstan-glpi/extension.neon
+    - ../../vendor/phpstan/phpstan-deprecation-rules/rules.neon
+    - ../../vendor/thecodingmachine/phpstan-safe-rule/phpstan-safe-rule.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+        - hook.php
+        - setup.php
+    scanDirectories:
+        - ../../src
+    bootstrapFiles:
+        - ../../stubs/glpi_constants.php
+        - ../../vendor/autoload.php
+    treatPhpDocTypesAsCertain: false
+    # The plugin supports GLPI 11 and 12: a few checks are always true on one version and always
+    # false on the other, so some inline ignores only match on one of them.
+    reportUnmatchedIgnoredErrors: false

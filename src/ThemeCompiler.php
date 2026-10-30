@@ -28,8 +28,6 @@
 
 namespace GlpiPlugin\Pimpmyglpi;
 
-use RuntimeException;
-
 use function Safe\json_encode;
 use function Safe\preg_replace;
 
@@ -81,11 +79,6 @@ final class ThemeCompiler
      */
     public static function compile(Settings $settings): array
     {
-        $directory = self::getDirectory();
-        if (!is_dir($directory) && !@mkdir($directory, 0755, true) && !is_dir($directory)) {
-            throw new RuntimeException(sprintf('Unable to create "%s".', $directory));
-        }
-
         $images = $settings->getImages();
         $css    = self::buildCss($settings, $images);
 
@@ -97,12 +90,12 @@ final class ThemeCompiler
             'css'            => $css === '' ? '' : substr(sha1($css), 0, 16),
             'images'         => array_map(
                 static fn(array $image): array => ['ext' => $image['ext'], 'mime' => $image['mime'], 'hash' => $image['hash']],
-                $images
+                $images,
             ),
         ];
 
-        self::writeAtomically(self::getCssPath(), $css);
-        self::writeAtomically(self::getRuntimePath(), json_encode($runtime, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        Filesystem::write(self::getCssPath(), $css);
+        Filesystem::write(self::getRuntimePath(), json_encode($runtime, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         return $runtime;
     }
@@ -129,6 +122,7 @@ final class ThemeCompiler
         if ($menu_dark !== null) {
             $root['--glpi-logo'] = $menu_dark;
         }
+
         if ($reduced_dark !== null) {
             $root['--glpi-logo-reduced'] = $reduced_dark;
         }
@@ -141,6 +135,7 @@ final class ThemeCompiler
             if ($login_light !== null) {
                 $root['--glpi-logo-dark-login'] = $login_light;
             }
+
             if ($login_dark !== null) {
                 $root['--glpi-logo-light-login'] = $login_dark;
             }
@@ -157,6 +152,7 @@ final class ThemeCompiler
                 $root['--glpi-logo-light-login'] = 'var(--glpi-logo-dark-login)';
             }
         }
+
         if ($root !== []) {
             $blocks[] = self::rule(':root', $root);
         }
@@ -171,11 +167,12 @@ final class ThemeCompiler
         }
 
         $palette_logos = [];
-        foreach ($images as $slot => $image) {
+        foreach (array_keys($images) as $slot) {
             $parsed = ImageSlots::parse($slot);
             if ($parsed === null || $parsed['palette'] === null) {
                 continue;
             }
+
             $selector = sprintf(':root[data-glpi-theme="%s"]', $parsed['palette']);
             $url      = self::url($slot, $images);
             switch ($parsed['base']) {
@@ -191,6 +188,7 @@ final class ThemeCompiler
                     break;
             }
         }
+
         foreach ($palette_logos as $selector => $declarations) {
             $blocks[] = self::rule($selector, $declarations);
         }
@@ -203,6 +201,7 @@ final class ThemeCompiler
                 break;
             }
         }
+
         if ($has_logo) {
             // Custom logos rarely have GLPI's exact ratio: fit them in GLPI's boxes.
             $blocks[] = self::rule('.page .glpi-logo, .navbar-brand .glpi-logo', [
@@ -220,12 +219,14 @@ final class ThemeCompiler
             $colors['--tblr-primary']     = $primary;
             $colors['--tblr-primary-fg']  = self::isLight($primary) ? '#1e293b' : '#ffffff';
         }
+
         if ($menu_color !== '') {
             $fg = self::isLight($menu_color) ? '#1e293b' : '#f4f6fa';
             $colors['--glpi-mainmenu-bg']       = $menu_color;
             $colors['--glpi-mainmenu-fg']       = $fg;
             $colors['--glpi-mainmenu-fg-muted'] = sprintf('rgba(%s, 0.7)', self::rgb($fg));
         }
+
         if ($colors !== []) {
             $blocks[] = self::rule(self::colorScope($settings), $colors);
         }
@@ -240,11 +241,13 @@ final class ThemeCompiler
             $style['--tblr-border-radius-lg'] = $large;
             $style['--tblr-border-radius-xl'] = $xl;
         }
+
         $font = $settings->get(Settings::FONT);
         if (isset(self::FONTS[$font])) {
             $style['--tblr-font-sans-serif']   = self::FONTS[$font];
             $style['--tblr-body-font-family']  = self::FONTS[$font];
         }
+
         if ($style !== []) {
             $blocks[] = self::rule(':root[data-glpi-theme]', $style);
             if (isset(self::FONTS[$font])) {
@@ -260,6 +263,7 @@ final class ThemeCompiler
             if ($login_bg_color !== '') {
                 $background['background-color'] = $login_bg_color . ' !important';
             }
+
             if ($has_bg_image) {
                 $background['background-image']      = self::url(ImageSlots::LOGIN_BACKGROUND, $images) . ' !important';
                 $background['background-size']       = 'cover !important';
@@ -267,6 +271,7 @@ final class ThemeCompiler
                 $background['background-repeat']     = 'no-repeat !important';
                 $background['background-attachment'] = 'fixed !important';
             }
+
             $blocks[] = self::rule('body.welcome-anonymous', $background);
 
             // Text around the login card must stay readable on the new background.
@@ -275,9 +280,10 @@ final class ThemeCompiler
                 '.page-anonymous .container-tight > .text-center, .page-anonymous .container-tight > .text-center a, .page-anonymous .container-tight > .text-center .text-muted',
                 $light_text
                     ? ['color' => '#f8fafc !important', 'text-shadow' => '0 1px 3px rgba(0, 0, 0, 0.55)']
-                    : ['color' => '#1e293b !important']
+                    : ['color' => '#1e293b !important'],
             );
         }
+
         if ($settings->get(Settings::LOGIN_CARD) === 'glass') {
             $blocks[] = self::rule('.page-anonymous .main-content-card', [
                 'background-color'        => 'rgba(255, 255, 255, 0.8) !important',
@@ -320,7 +326,7 @@ final class ThemeCompiler
 
     public static function isLight(string $hex_color): bool
     {
-        [$r, $g, $b] = array_map('intval', explode(',', self::rgb($hex_color)));
+        [$r, $g, $b] = array_map(intval(...), explode(',', self::rgb($hex_color)));
         // Relative luminance (WCAG)
         $channel = static function (int $value): float {
             $c = $value / 255;
@@ -344,6 +350,7 @@ final class ThemeCompiler
         if (isset($images[ImageSlots::LOGIN_BACKGROUND]) && in_array($image_tone, ['light', 'dark'], true)) {
             return $image_tone;
         }
+
         $color = $settings->get(Settings::LOGIN_BG_COLOR);
         if ($color !== '') {
             return self::isLight($color) ? 'light' : 'dark';
@@ -405,15 +412,5 @@ final class ThemeCompiler
         }
 
         return $selector . " {\n" . implode("\n", $lines) . "\n}";
-    }
-
-    private static function writeAtomically(string $path, string $content): void
-    {
-        $tmp = $path . '.tmp' . bin2hex(random_bytes(4));
-        if (@file_put_contents($tmp, $content) === false || !@rename($tmp, $path)) {
-            @unlink($tmp);
-            throw new RuntimeException(sprintf('Unable to write "%s".', $path));
-        }
-        @chmod($path, 0644);
     }
 }

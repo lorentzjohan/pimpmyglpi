@@ -1,13 +1,31 @@
 /**
  * -------------------------------------------------------------------------
  * PimpMyGLPI plugin for GLPI
- * @copyright Copyright (C) 2026 LORENTZ Johan
- * @license   GPL-3.0-or-later https://www.gnu.org/licenses/gpl-3.0.html
  * -------------------------------------------------------------------------
  *
- * Configuration page: drag and drop of the images, with an immediate preview and the same
- * type / size checks as the server (which checks everything again on save).
+ * This file is part of PimpMyGLPI.
+ *
+ * PimpMyGLPI is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PimpMyGLPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PimpMyGLPI. If not, see <https://www.gnu.org/licenses/>.
+ * -------------------------------------------------------------------------
+ * @copyright Copyright (C) 2026 LORENTZ Johan
+ * @license   GPL-3.0-or-later https://www.gnu.org/licenses/gpl-3.0.html
+ * @link      https://github.com/lorentzjohan
+ * -------------------------------------------------------------------------
  */
+
+// Configuration page: drag and drop of the images, with an immediate preview and the same
+// type / size checks as the server (which checks everything again on save).
 (function () {
     'use strict';
 
@@ -34,6 +52,15 @@
     ['dragover', 'drop'].forEach(function (type) {
         window.addEventListener(type, function (event) {
             if (hasFiles(event)) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    // Confirmation before a destructive action (form attribute data-pimpmyglpi-confirm).
+    root.querySelectorAll('form[data-pimpmyglpi-confirm]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!window.confirm(form.getAttribute('data-pimpmyglpi-confirm'))) {
                 event.preventDefault();
             }
         });

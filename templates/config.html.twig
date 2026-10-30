@@ -2,6 +2,22 @@
  # -------------------------------------------------------------------------
  # PimpMyGLPI plugin for GLPI
  # -------------------------------------------------------------------------
+ #
+ # This file is part of PimpMyGLPI.
+ #
+ # PimpMyGLPI is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+ # the Free Software Foundation, either version 3 of the License, or
+ # (at your option) any later version.
+ #
+ # PimpMyGLPI is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ # GNU General Public License for more details.
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with PimpMyGLPI. If not, see <https://www.gnu.org/licenses/>.
+ # -------------------------------------------------------------------------
  # @copyright Copyright (C) 2026 LORENTZ Johan
  # @license   GPL-3.0-or-later https://www.gnu.org/licenses/gpl-3.0.html
  # @link      https://github.com/lorentzjohan
@@ -68,10 +84,11 @@
     <div class="form-field row align-items-center col-12 glpi-full-width mb-2">
         <label class="col-form-label col-xxl-5 text-xxl-end" for="{{ name }}_input">{{ label }}</label>
         <div class="col-xxl-7 field-container d-flex align-items-center gap-3">
-            <label class="form-check form-switch mb-0">
-                <input type="hidden" name="{{ name }}_enabled" value="0" />
-                <input class="form-check-input" type="checkbox" name="{{ name }}_enabled" value="1" {{ value is not empty ? 'checked' : '' }} />
-            </label>
+            <input type="hidden" name="{{ name }}_enabled" value="0" />
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="{{ name }}_enabled" name="{{ name }}_enabled" value="1" {{ value is not empty ? 'checked' : '' }} />
+                <label class="form-check-label visually-hidden" for="{{ name }}_enabled">{{ __('Use a custom color', 'pimpmyglpi') }} ({{ label }})</label>
+            </div>
             <input type="color" class="form-control form-control-color" id="{{ name }}_input" name="{{ name }}" value="{{ value is not empty ? value : default }}" />
             {% if helper is not empty %}<span class="form-text m-0">{{ helper }}</span>{% endif %}
         </div>
@@ -79,31 +96,7 @@
 {% endmacro %}
 
 {% block content %}
-<style>
-    .pimpmyglpi-preview { display: flex; align-items: center; justify-content: center; min-width: 120px; height: 72px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--tblr-border-color);
-        background-color: #fff; background-image: linear-gradient(45deg, #eef1f5 25%, transparent 25%), linear-gradient(-45deg, #eef1f5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eef1f5 75%), linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
-        background-size: 14px 14px; background-position: 0 0, 0 7px, 7px -7px, -7px 0; }
-    .pimpmyglpi-preview-dark { background: #2f3f64; }
-    .pimpmyglpi-dropzone { position: relative; }
-    .pimpmyglpi-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
-    .pimpmyglpi-drop-target { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 120px; padding: 12px; margin: 0;
-        border: 2px dashed var(--tblr-border-color); border-radius: 8px; cursor: pointer; text-align: center; transition: border-color .15s, box-shadow .15s; }
-    .pimpmyglpi-drop-target:hover, .pimpmyglpi-dropzone:focus-within .pimpmyglpi-drop-target { border-color: var(--tblr-primary); }
-    .pimpmyglpi-dropzone.is-dragover .pimpmyglpi-drop-target { border-color: var(--tblr-primary); box-shadow: 0 0 0 4px rgba(var(--tblr-primary-rgb), .25); }
-    .pimpmyglpi-dropzone.has-file .pimpmyglpi-drop-target { border-style: solid; border-color: var(--tblr-success, #2fb344); }
-    .pimpmyglpi-drop-preview { display: flex; align-items: center; justify-content: center; min-height: 64px; }
-    .pimpmyglpi-drop-preview img { max-height: 64px; max-width: 100%; }
-    .pimpmyglpi-drop-preview img.pimpmyglpi-default { opacity: .45; }
-    .pimpmyglpi-drop-hint { font-size: .8rem; }
-    .pimpmyglpi-bg-dark .pimpmyglpi-drop-target { background: #2f3f64; color: #e2e8f0; }
-    .pimpmyglpi-bg-light .pimpmyglpi-drop-target { background: #fff; color: #475569; }
-    .pimpmyglpi-bg-checker .pimpmyglpi-drop-target { color: #475569; background-color: #fff;
-        background-image: linear-gradient(45deg, #eef1f5 25%, transparent 25%), linear-gradient(-45deg, #eef1f5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eef1f5 75%), linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
-        background-size: 14px 14px; background-position: 0 0, 0 7px, 7px -7px, -7px 0; }
-    .pimpmyglpi-drop-selection { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: .8rem; }
-    .pimpmyglpi-preview img { max-height: 60px; max-width: 100%; }
-    .pimpmyglpi-examples img { max-height: 48px; max-width: 140px; }
-</style>
+<link rel="stylesheet" href="{{ base_path }}/plugins/pimpmyglpi/css/config.css?v={{ plugin_version|url_encode }}" />
 <div class="container-xl" data-pimpmyglpi-config
      data-msg-type="{{ __('Unsupported file type. Accepted formats: %s.', 'pimpmyglpi') }}"
      data-msg-size="{{ __('The file is too large: %s at most.', 'pimpmyglpi') }}">
@@ -291,7 +284,7 @@
                         <span>{{ __('Apply the example images', 'pimpmyglpi') }}</span>
                     </button>
                 </form>
-                <form action="{{ form_url }}/reset" method="post" onsubmit="return confirm({{ __('Remove every customization and restore the GLPI appearance?', 'pimpmyglpi')|json_encode|e('html_attr') }});">
+                <form action="{{ form_url }}/reset" method="post" data-pimpmyglpi-confirm="{{ __('Remove every customization and restore the GLPI appearance?', 'pimpmyglpi') }}">
                     {{ _self.csrf(csrf_token) }}
                     <button type="submit" class="btn btn-outline-danger">
                         <i class="ti ti-restore" aria-hidden="true"></i>

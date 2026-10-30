@@ -49,6 +49,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Throwable;
 
+use function Safe\ini_get;
+
 /**
  * Configuration page: /plugins/pimpmyglpi/config
  *
@@ -84,18 +86,19 @@ final class ConfigController extends AbstractController
     #[SecurityStrategy(Firewall::STRATEGY_ADMIN_ACCESS)]
     public function show(Request $request): Response
     {
-        self::checkAccess();
+        $this->checkAccess();
 
         $settings = Settings::load();
         $images   = $settings->getImages();
-        $palettes = self::getPalettes();
+        $palettes = $this->getPalettes();
 
         $image_groups = [];
-        foreach (self::getImageGroups() as $key => $group) {
+        foreach ($this->getImageGroups() as $key => $group) {
             $variants = [];
             foreach ($group['variants'] as $variant) {
-                $variants[] = $variant + self::describeSlot($variant['slot'], $images);
+                $variants[] = $variant + $this->describeSlot($variant['slot'], $images);
             }
+
             $image_groups[] = ['key' => $key, 'variants' => $variants] + $group;
         }
 
@@ -109,6 +112,7 @@ final class ConfigController extends AbstractController
                 }
             }
         }
+
         $login_tone = ThemeCompiler::getLoginBackgroundTone($settings, $images);
         $source     = isset($images[ImageSlots::LOGIN_BACKGROUND]) ? __('background image', 'pimpmyglpi') : __('background color', 'pimpmyglpi');
         $messages['login'] = match ($login_tone) {
@@ -121,8 +125,9 @@ final class ConfigController extends AbstractController
         foreach ($palettes as $key => $palette) {
             $logos = [];
             foreach (ImageSlots::PALETTE_LOGOS as $logo) {
-                $logos[$logo] = self::describeImage(ImageSlots::paletteSlot($key, $logo), $images);
+                $logos[$logo] = $this->describeImage(ImageSlots::paletteSlot($key, $logo), $images);
             }
+
             if (array_filter($logos) !== []) {
                 $palette_images[] = ['key' => $key, 'name' => $palette['name'], 'dark' => $palette['dark'], 'logos' => $logos];
             }
@@ -131,16 +136,16 @@ final class ConfigController extends AbstractController
         $examples_url = $request->getBasePath() . '/plugins/pimpmyglpi/examples/';
 
         return $this->render('@pimpmyglpi/config.html.twig', [
-            'form_url'       => self::getUrl($request),
+            'form_url'       => $this->getUrl($request),
             'settings'       => $settings->toArray(),
-            'choices'        => self::getChoiceLabels(),
+            'choices'        => $this->getChoiceLabels(),
             'palettes'       => $palettes,
             'image_groups'   => $image_groups,
             'messages'       => $messages,
             'plugin_version' => PLUGIN_PIMPMYGLPI_VERSION,
             'palette_logos'  => ImageSlots::PALETTE_LOGOS,
             'palette_images' => $palette_images,
-            'logo_labels'    => self::getPaletteLogoLabels(),
+            'logo_labels'    => $this->getPaletteLogoLabels(),
             'logo_accept'    => ImageSlots::getAcceptAttribute(ImageSlots::LOGO_MENU),
             'logo_formats'   => strtoupper(implode(', ', ImageSlots::getDefinition(ImageSlots::LOGO_MENU)['types'])),
             'logo_max_size'  => ImageSlots::getDefinition(ImageSlots::LOGO_MENU)['max_size'],
@@ -152,7 +157,7 @@ final class ConfigController extends AbstractController
                 'logo-P-100-white.png', 'logo-P-100-black.png', 'logo-P-100-grey.png',
                 'favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'login-background.jpg',
             ],
-            'upload_limit'   => ini_get('upload_max_filesize') ?: '',
+            'upload_limit'   => ini_get('upload_max_filesize'),
             'csrf_token'     => GlpiCompat::getCsrfToken(),
         ]);
     }
@@ -161,46 +166,51 @@ final class ConfigController extends AbstractController
     #[SecurityStrategy(Firewall::STRATEGY_ADMIN_ACCESS)]
     public function update(Request $request): Response
     {
-        self::checkAccess();
+        $this->checkAccess();
+
+        /** @var array<string, mixed> $input */
 
         $input    = $request->request->all();
         $settings = Settings::load();
         $images   = $settings->getImages();
-        $palettes = self::getPalettes();
+        $palettes = $this->getPalettes();
         $errors   = [];
 
         // ---- Text and choice settings ----------------------------------------------------
         $values = [
-            Settings::APP_NAME       => Settings::normalizeAppName(self::string($input, Settings::APP_NAME)),
-            Settings::COLORS_ON_DARK => self::bool($input, Settings::COLORS_ON_DARK) ? '1' : '0',
-            Settings::CUSTOM_CSS     => ThemeCompiler::sanitizeCustomCss(self::string($input, Settings::CUSTOM_CSS)),
+            Settings::APP_NAME       => Settings::normalizeAppName($this->string($input, Settings::APP_NAME)),
+            Settings::COLORS_ON_DARK => $this->bool($input, Settings::COLORS_ON_DARK) ? '1' : '0',
+            Settings::CUSTOM_CSS     => ThemeCompiler::sanitizeCustomCss($this->string($input, Settings::CUSTOM_CSS)),
         ];
 
-        $palette = self::string($input, Settings::FORCED_PALETTE);
+        $palette = $this->string($input, Settings::FORCED_PALETTE);
         if ($palette !== '' && !isset($palettes[$palette])) {
             $errors[] = __('Unknown palette.', 'pimpmyglpi');
         }
+
         $values[Settings::FORCED_PALETTE] = $palette;
 
         foreach (array_keys(Settings::CHOICES) as $setting) {
-            $value = self::string($input, $setting) ?: 'default';
+            $value = $this->string($input, $setting) ?: 'default';
             if (!Settings::isValidChoice($setting, $value)) {
                 $errors[] = __('Invalid value.', 'pimpmyglpi');
                 $value = 'default';
             }
+
             $values[$setting] = $value;
         }
 
         foreach ([Settings::PRIMARY_COLOR, Settings::MENU_COLOR, Settings::LOGIN_BG_COLOR] as $setting) {
-            $color = self::bool($input, $setting . '_enabled') ? Settings::normalizeColor(self::string($input, $setting)) : '';
+            $color = $this->bool($input, $setting . '_enabled') ? Settings::normalizeColor($this->string($input, $setting)) : '';
             if ($color === null) {
                 $errors[] = __('Invalid color: use the #RRGGBB format.', 'pimpmyglpi');
                 $color = '';
             }
+
             $values[$setting] = $color;
         }
 
-        if (mb_strlen(self::string($input, Settings::CUSTOM_CSS)) > Settings::CUSTOM_CSS_MAX_LENGTH) {
+        if (mb_strlen($this->string($input, Settings::CUSTOM_CSS)) > Settings::CUSTOM_CSS_MAX_LENGTH) {
             $errors[] = sprintf(__('The custom CSS is too long: %d characters at most.', 'pimpmyglpi'), Settings::CUSTOM_CSS_MAX_LENGTH);
         }
 
@@ -216,7 +226,8 @@ final class ConfigController extends AbstractController
         foreach (ImageSlots::getGlobalSlots() as $slot) {
             $uploads[$slot] = $request->files->get($slot);
         }
-        $palette_key = self::string($input, 'palette_key');
+
+        $palette_key = $this->string($input, 'palette_key');
         foreach (ImageSlots::PALETTE_LOGOS as $logo) {
             $file = $request->files->get('palette_' . $logo);
             if ($file instanceof UploadedFile) {
@@ -224,25 +235,29 @@ final class ConfigController extends AbstractController
                     $errors[] = __('Choose the palette the logos are for.', 'pimpmyglpi');
                     break;
                 }
+
                 $uploads[ImageSlots::paletteSlot($palette_key, $logo)] = $file;
             }
         }
 
         $validated = [];
-        $labels    = self::getSlotLabels();
+        $labels    = $this->getSlotLabels();
         foreach ($uploads as $slot => $file) {
             if (!$file instanceof UploadedFile) {
                 continue;
             }
+
             $parsed = ImageSlots::parse($slot);
             $label  = $labels[$parsed['base'] ?? ''] ?? $slot;
             if (($parsed['palette'] ?? null) !== null) {
                 $label .= ' (' . ($palettes[$parsed['palette']]['name'] ?? $parsed['palette']) . ')';
             }
+
             if (!$file->isValid()) {
-                $errors[] = sprintf(__('%1$s: the upload failed (%2$s).', 'pimpmyglpi'), $label, self::uploadError($file->getError()));
+                $errors[] = sprintf(__('%1$s: the upload failed (%2$s).', 'pimpmyglpi'), $label, $this->uploadError($file->getError()));
                 continue;
             }
+
             try {
                 $validated[$slot] = [$file->getPathname(), ImageStore::validateFile($slot, $file->getPathname())];
             } catch (ImageValidationException $e) {
@@ -254,9 +269,10 @@ final class ConfigController extends AbstractController
             foreach (array_unique($errors) as $error) {
                 Session::addMessageAfterRedirect(htmlescape($error), false, ERROR);
             }
+
             Session::addMessageAfterRedirect(__s('Nothing was saved.', 'pimpmyglpi'), false, ERROR);
 
-            return new RedirectResponse(self::getUrl($request));
+            return new RedirectResponse($this->getUrl($request));
         }
 
         try {
@@ -264,26 +280,27 @@ final class ConfigController extends AbstractController
                 ImageStore::delete($slot);
                 unset($images[$slot]);
             }
+
             foreach ($validated as $slot => [$path, $info]) {
                 $images[$slot] = ImageStore::store($slot, $path, $info);
             }
 
             $values[Settings::IMAGES] = json_encode($images, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
             Settings::save($values);
-            self::compile();
+            $this->compile();
             Session::addMessageAfterRedirect(__s('Settings saved', 'pimpmyglpi'));
-        } catch (Throwable $e) {
-            self::reportFailure($e);
+        } catch (Throwable $throwable) {
+            $this->reportFailure($throwable);
         }
 
-        return new RedirectResponse(self::getUrl($request));
+        return new RedirectResponse($this->getUrl($request));
     }
 
     #[Route('/config/examples', name: 'config_examples', methods: ['POST'])]
     #[SecurityStrategy(Firewall::STRATEGY_ADMIN_ACCESS)]
     public function applyExamples(Request $request): Response
     {
-        self::checkAccess();
+        $this->checkAccess();
 
         try {
             $images    = Settings::load()->getImages();
@@ -292,61 +309,62 @@ final class ConfigController extends AbstractController
                 $info          = ImageStore::validateFile($slot, $directory . $file);
                 $images[$slot] = ImageStore::store($slot, $directory . $file, $info);
             }
+
             Settings::save([Settings::IMAGES => json_encode($images, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)]);
-            self::compile();
+            $this->compile();
             Session::addMessageAfterRedirect(__s('The example images are applied.', 'pimpmyglpi'));
-        } catch (Throwable $e) {
-            self::reportFailure($e);
+        } catch (Throwable $throwable) {
+            $this->reportFailure($throwable);
         }
 
-        return new RedirectResponse(self::getUrl($request));
+        return new RedirectResponse($this->getUrl($request));
     }
 
     #[Route('/config/reset', name: 'config_reset', methods: ['POST'])]
     #[SecurityStrategy(Firewall::STRATEGY_ADMIN_ACCESS)]
     public function reset(Request $request): Response
     {
-        self::checkAccess();
+        $this->checkAccess();
 
         try {
             ImageStore::deleteAll();
             Settings::save(Settings::DEFAULTS);
-            self::compile();
+            $this->compile();
             Session::addMessageAfterRedirect(__s('GLPI appearance restored.', 'pimpmyglpi'));
-        } catch (Throwable $e) {
-            self::reportFailure($e);
+        } catch (Throwable $throwable) {
+            $this->reportFailure($throwable);
         }
 
-        return new RedirectResponse(self::getUrl($request));
+        return new RedirectResponse($this->getUrl($request));
     }
 
-    private static function checkAccess(): void
+    private function checkAccess(): void
     {
         Session::checkRight(Config::$rightname, UPDATE);
         GlpiCompat::checkConfigReAuthentication();
     }
 
-    private static function compile(): void
+    private function compile(): void
     {
         ThemeCompiler::compile(Settings::load());
         Runtime::reset();
     }
 
-    private static function reportFailure(Throwable $e): void
+    private function reportFailure(Throwable $e): void
     {
         global $PHPLOGGER;
         $PHPLOGGER->error(sprintf('PimpMyGLPI: %s', $e->getMessage()), ['exception' => $e]);
         Session::addMessageAfterRedirect(
             __s('The changes could not be saved: check that GLPI can write in its files directory.', 'pimpmyglpi'),
             false,
-            ERROR
+            ERROR,
         );
     }
 
     /**
      * @return array<string, array{name: string, dark: bool}>
      */
-    private static function getPalettes(): array
+    private function getPalettes(): array
     {
         $palettes = [];
         foreach (ThemeManager::getInstance()->getAllThemes() as $theme) {
@@ -354,17 +372,18 @@ final class ConfigController extends AbstractController
                 $palettes[$theme->getKey()] = ['name' => $theme->getName(), 'dark' => $theme->isDarkTheme()];
             }
         }
+
         uasort($palettes, static fn(array $a, array $b): int => strnatcasecmp($a['name'], $b['name']));
 
         return $palettes;
     }
 
     /**
-     * @param array<string, array{ext: string, mime: string, hash: string, width: int, height: int}> $images
+     * @param array<string, array{ext: string, mime: string, hash: string, width: int, height: int, tone: string}> $images
      *
      * @return array{url: string, width: int, height: int, ext: string, tone: string}|null
      */
-    private static function describeImage(string $slot, array $images): ?array
+    private function describeImage(string $slot, array $images): ?array
     {
         if (!isset($images[$slot])) {
             return null;
@@ -385,7 +404,7 @@ final class ConfigController extends AbstractController
      *
      * @return array<string, array{label: string, help: string, variants: list<array{slot: string, label: string, note: string, background: string}>}>
      */
-    private static function getImageGroups(): array
+    private function getImageGroups(): array
     {
         $dark_menu = [
             'label'      => __('Dark menu', 'pimpmyglpi'),
@@ -451,10 +470,10 @@ final class ConfigController extends AbstractController
      *
      * @return array<string, string>
      */
-    private static function getSlotLabels(): array
+    private function getSlotLabels(): array
     {
         $labels = [];
-        foreach (self::getImageGroups() as $group) {
+        foreach ($this->getImageGroups() as $group) {
             foreach ($group['variants'] as $variant) {
                 $labels[$variant['slot']] = $group['label'] . ($variant['label'] !== '' ? ' (' . $variant['label'] . ')' : '');
             }
@@ -470,7 +489,7 @@ final class ConfigController extends AbstractController
      *
      * @return array<string, mixed>
      */
-    private static function describeSlot(string $slot, array $images): array
+    private function describeSlot(string $slot, array $images): array
     {
         $definition = ImageSlots::getDefinition($slot);
 
@@ -478,7 +497,7 @@ final class ConfigController extends AbstractController
             'formats'  => strtoupper(implode(', ', $definition['types'])),
             'accept'   => ImageSlots::getAcceptAttribute($slot),
             'max_size' => $definition['max_size'],
-            'image'    => self::describeImage($slot, $images),
+            'image'    => $this->describeImage($slot, $images),
             'default'  => self::DEFAULT_IMAGES[$slot] ?? null,
         ];
     }
@@ -486,7 +505,7 @@ final class ConfigController extends AbstractController
     /**
      * @return array<string, string>
      */
-    private static function getPaletteLogoLabels(): array
+    private function getPaletteLogoLabels(): array
     {
         return [
             ImageSlots::LOGO_MENU         => __('Main menu logo', 'pimpmyglpi'),
@@ -498,7 +517,7 @@ final class ConfigController extends AbstractController
     /**
      * @return array<string, array<string, string>>
      */
-    private static function getChoiceLabels(): array
+    private function getChoiceLabels(): array
     {
         return [
             Settings::RADIUS => [
@@ -519,7 +538,7 @@ final class ConfigController extends AbstractController
         ];
     }
 
-    private static function uploadError(int $code): string
+    private function uploadError(int $code): string
     {
         return match ($code) {
             UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => __('file too large for the server', 'pimpmyglpi'),
@@ -531,7 +550,7 @@ final class ConfigController extends AbstractController
     /**
      * @param array<string, mixed> $input
      */
-    private static function string(array $input, string $key): string
+    private function string(array $input, string $key): string
     {
         $value = $input[$key] ?? '';
 
@@ -541,12 +560,12 @@ final class ConfigController extends AbstractController
     /**
      * @param array<string, mixed> $input
      */
-    private static function bool(array $input, string $key): bool
+    private function bool(array $input, string $key): bool
     {
         return in_array($input[$key] ?? '0', ['1', 'on', 'true'], true);
     }
 
-    private static function getUrl(Request $request): string
+    private function getUrl(Request $request): string
     {
         return $request->getBasePath() . '/plugins/pimpmyglpi/config';
     }

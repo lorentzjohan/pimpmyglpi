@@ -1,8 +1,22 @@
+<div align="center">
+
 # PimpMyGLPI — GLPI 11 / 12 plugin
+
+[![Continuous integration](https://github.com/lorentzjohan/pimpmyglpi/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/lorentzjohan/pimpmyglpi/actions/workflows/continuous-integration.yml)
+[![Latest release](https://img.shields.io/github/v/release/lorentzjohan/pimpmyglpi?sort=semver&label=release)](https://github.com/lorentzjohan/pimpmyglpi/releases/latest)
+[![License: GPL v3+](https://img.shields.io/github/license/lorentzjohan/pimpmyglpi)](LICENSE)
+[![GLPI 11 | 12](https://img.shields.io/badge/GLPI-11.x%20%7C%2012.x-blue)](https://glpi-project.org)
+[![PHP 8.2 to 8.5](https://img.shields.io/badge/PHP-8.2%20to%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/supported-versions.php)
+[![PHPStan: level max](https://img.shields.io/badge/PHPStan-level%20max-brightgreen)](phpstan.neon)
+[![Psalm: taint analysis](https://img.shields.io/badge/Psalm-taint%20analysis-brightgreen)](psalm.xml)
+[![Code style: PHP-CS-Fixer](https://img.shields.io/badge/code%20style-PHP--CS--Fixer-brightgreen)](.php-cs-fixer.php)
+[![Languages: EN | FR](https://img.shields.io/badge/languages-EN%20%7C%20FR-informational)](locales)
 
 Give GLPI your own look: application name, favicon, logos (also per palette), colors, login page and custom CSS.
 
-- Version: 1.1.0
+</div>
+
+- Version: 1.1.1
 - Author: [lorentzjohan (LORENTZ Johan)](https://github.com/lorentzjohan)
 - License: GPL-3.0-or-later
 - Compatibility: GLPI 11.x and 12.x (tested on 11.0.12 and 12.0.1), PHP 8.2 to 8.5 (8.3 minimum with GLPI 12)
@@ -40,7 +54,7 @@ php bin/console plugin:install pimpmyglpi -u glpi
 php bin/console plugin:activate pimpmyglpi
 ```
 
-The plugin never writes in its own folder nor in the GLPI code. Settings are stored in the database, images and compiled files in `GLPI_PLUGIN_DOC_DIR/pimpmyglpi/` (`files/_plugins/pimpmyglpi/` by default, `/var/lib/glpi/_plugins/pimpmyglpi/` when `GLPI_VAR_DIR` is `/var/lib/glpi`). Only this data directory must be writable by the web server, as it already is for GLPI.
+The plugin never writes in its own folder nor in the GLPI code. Settings are stored in the database, images and compiled files in `GLPI_PLUGIN_DOC_DIR/pimpmyglpi/` (`files/_plugins/pimpmyglpi/` by default, `/var/lib/glpi/_plugins/pimpmyglpi/` when `GLPI_VAR_DIR` is `/var/lib/glpi`). Only this data directory must be writable by the web server, as it already is for GLPI. The files are created with private permissions (`0640`, directories `0750`): as recommended by GLPI, run the console commands as the web server user (for example `sudo -u www-data php bin/console ...`). The theme is compiled on the first page after an install or an update.
 
 ## Configuration
 
@@ -85,6 +99,7 @@ The configuration page shows them, lets you download them, and applies them in o
 ## Security
 
 - The configuration page requires the `config` update right, plus a re-authentication on GLPI 12. CSRF protection is handled by GLPI (form token on GLPI 11, request headers on GLPI 12).
+- Stored images and compiled files are only readable by the web server user and its group (files `0640`, directories `0750`).
 - Uploads are checked by their content, never by their name: real file type, size and dimensions. Everything is validated before anything is written.
 - SVG files containing scripts, event handlers, external links, `javascript:` URLs, DTD or entities are refused. Images are also served with `X-Content-Type-Options: nosniff` and a sandboxing `Content-Security-Policy`, so an image opened on its own can never run code.
 - Only the images registered by the plugin can be served: file names are built from a fixed list of slots, never from the request.
@@ -112,14 +127,19 @@ src/ImageStore.php                   Upload checks (type, size, safe SVG) and st
 src/ThemeCompiler.php                Compiles theme.css and runtime.json
 src/Runtime.php                      Applies the customization on every request
 src/GlpiCompat.php                   GLPI 11 / 12 differences (CSRF, re-authentication)
+src/Filesystem.php                   File operations (atomic writes, private permissions)
+src/Scalar.php                       Typed reading of settings and runtime data
 src/Controller/ConfigController.php  Configuration page
 src/Controller/AssetController.php   Serves the stylesheet and the images
 templates/config.html.twig           Configuration page view
 public/js/favicon.js                 Keeps the custom favicon only
-public/js/config.js                  Drag and drop on the configuration page
+public/js/config.js                  Drag and drop and confirmations on the configuration page
+public/css/config.css                Configuration page styles
 public/examples/                     Example images and their SVG sources
 locales/                             Translations (en_GB, fr_FR) and pimpmyglpi.pot template
-tests/Units/                         Unit tests (PHPUnit, GLPI development environment)
+tests/Units/                         Unit tests (PHPUnit)
+tests/Integration/                   Integration tests inside GLPI, on its test database (PHPUnit)
+.github/workflows/                   Continuous integration on GLPI 11 and 12
 ```
 
 ## Support the project

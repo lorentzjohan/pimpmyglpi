@@ -26,6 +26,7 @@
  * -------------------------------------------------------------------------
  */
 
+use GlpiPlugin\Pimpmyglpi\Filesystem;
 use GlpiPlugin\Pimpmyglpi\ImageStore;
 use GlpiPlugin\Pimpmyglpi\Runtime;
 use GlpiPlugin\Pimpmyglpi\Settings;
@@ -39,7 +40,11 @@ use GlpiPlugin\Pimpmyglpi\ThemeCompiler;
 function plugin_pimpmyglpi_install(): bool
 {
     Settings::install();
-    ThemeCompiler::compile(Settings::load());
+
+    // The theme is compiled again on the next page, by the web server user: the console may run
+    // as another user (root), whose files the web server could not read with private permissions.
+    Filesystem::remove(ThemeCompiler::getCssPath());
+    Filesystem::remove(ThemeCompiler::getRuntimePath());
     Runtime::reset();
 
     return true;
@@ -51,14 +56,8 @@ function plugin_pimpmyglpi_install(): bool
 function plugin_pimpmyglpi_uninstall(): bool
 {
     Settings::uninstall();
-    ImageStore::deleteAll();
-    foreach ([ThemeCompiler::getCssPath(), ThemeCompiler::getRuntimePath()] as $file) {
-        if (is_file($file)) {
-            @unlink($file);
-        }
-    }
-    @rmdir(ImageStore::getDirectory());
-    @rmdir(ThemeCompiler::getDirectory());
+    Filesystem::removeDirectory(ImageStore::getDirectory());
+    Filesystem::removeDirectory(ThemeCompiler::getDirectory());
     Runtime::reset();
 
     return true;

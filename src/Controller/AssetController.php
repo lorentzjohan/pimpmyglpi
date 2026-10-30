@@ -31,6 +31,7 @@ namespace GlpiPlugin\Pimpmyglpi\Controller;
 use Glpi\Controller\AbstractController;
 use Glpi\Http\Firewall;
 use Glpi\Security\Attribute\SecurityStrategy;
+use GlpiPlugin\Pimpmyglpi\Filesystem;
 use GlpiPlugin\Pimpmyglpi\ImageSlots;
 use GlpiPlugin\Pimpmyglpi\ImageStore;
 use GlpiPlugin\Pimpmyglpi\Runtime;
@@ -50,7 +51,7 @@ final class AssetController extends AbstractController
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function stylesheet(Request $request): Response
     {
-        $hash = (string) (Runtime::get()['css'] ?? '');
+        $hash = Runtime::getString('css');
         $path = ThemeCompiler::getCssPath();
         if ($hash === '' || !is_file($path)) {
             return new Response('', Response::HTTP_NOT_FOUND, ['Content-Type' => 'text/css; charset=utf-8']);
@@ -59,7 +60,7 @@ final class AssetController extends AbstractController
         $css = str_replace(
             ThemeCompiler::BASE_PATH_PLACEHOLDER,
             $request->getBasePath(),
-            (string) file_get_contents($path)
+            Filesystem::read($path),
         );
 
         return $this->cache($request, new Response($css, Response::HTTP_OK), 'text/css; charset=utf-8', $hash);
@@ -73,6 +74,7 @@ final class AssetController extends AbstractController
         if ($image === null || !isset(ImageStore::MIME_TYPES[$image['ext']])) {
             return new Response('', Response::HTTP_NOT_FOUND);
         }
+
         $path = ImageStore::getPath($slot, $image['ext']);
         if (!is_file($path)) {
             return new Response('', Response::HTTP_NOT_FOUND);
@@ -109,6 +111,7 @@ final class AssetController extends AbstractController
         } else {
             $response->setMaxAge(300);
         }
+
         $response->isNotModified($request);
 
         return $response;

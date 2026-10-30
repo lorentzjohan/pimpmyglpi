@@ -40,20 +40,30 @@ use function Safe\preg_replace;
  * The database is the source of truth. What pages need at run time is compiled into
  * small files by {@see ThemeCompiler}, so that no query is run on every request.
  */
-final class Settings
+final readonly class Settings
 {
     public const CONTEXT = 'plugin:pimpmyglpi';
 
     public const APP_NAME          = 'app_name';
+
     public const FORCED_PALETTE    = 'forced_palette';
+
     public const PRIMARY_COLOR     = 'primary_color';
+
     public const MENU_COLOR        = 'menu_color';
+
     public const COLORS_ON_DARK    = 'colors_on_dark_palettes';
+
     public const RADIUS            = 'radius';
+
     public const FONT              = 'font';
+
     public const LOGIN_BG_COLOR    = 'login_background_color';
+
     public const LOGIN_CARD        = 'login_card';
+
     public const CUSTOM_CSS        = 'custom_css';
+
     public const IMAGES            = 'images';
 
     /** @var array<string, string> */
@@ -79,21 +89,22 @@ final class Settings
     ];
 
     public const APP_NAME_MAX_LENGTH   = 60;
+
     public const CUSTOM_CSS_MAX_LENGTH = 65535;
 
     /**
      * @param array<string, string> $values
      */
-    private function __construct(private readonly array $values) {}
+    private function __construct(private array $values) {}
 
     public static function load(): self
     {
-        $stored = Config::getConfigurationValues(self::CONTEXT, array_keys(self::DEFAULTS));
+        $values = [];
+        foreach (Config::getConfigurationValues(self::CONTEXT, array_keys(self::DEFAULTS)) as $name => $value) {
+            $values[(string) $name] = Scalar::toString($value);
+        }
 
-        return self::fromArray(array_map(
-            static fn(mixed $value): string => is_scalar($value) ? (string) $value : '',
-            $stored
-        ));
+        return self::fromArray($values);
     }
 
     /**
@@ -129,6 +140,7 @@ final class Settings
         } catch (JsonException) {
             return [];
         }
+
         if (!is_array($images)) {
             return [];
         }
@@ -145,12 +157,13 @@ final class Settings
                     'ext'    => $image['ext'],
                     'mime'   => ImageStore::MIME_TYPES[$image['ext']],
                     'hash'   => $image['hash'],
-                    'width'  => (int) ($image['width'] ?? 0),
-                    'height' => (int) ($image['height'] ?? 0),
-                    'tone'   => in_array($image['tone'] ?? '', ['light', 'dark'], true) ? $image['tone'] : '',
+                    'width'  => Scalar::toInt($image['width'] ?? 0),
+                    'height' => Scalar::toInt($image['height'] ?? 0),
+                    'tone'   => in_array($image['tone'] ?? '', ['light', 'dark'], true) ? Scalar::toString($image['tone']) : '',
                 ];
             }
         }
+
         ksort($valid);
 
         return $valid;

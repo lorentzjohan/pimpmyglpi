@@ -3,7 +3,7 @@
 # This file is distributed under the GNU General Public License v3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: pimpmyglpi 1.1.0\n"
+"Project-Id-Version: pimpmyglpi 1.1.1\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-10-29 00:00+0000\n"
 "Last-Translator: LORENTZ Johan\n"
@@ -182,6 +182,9 @@ msgstr "Déposez une image ici ou cliquez pour parcourir"
 
 msgid "Cancel"
 msgstr "Annuler"
+
+msgid "Use a custom color"
+msgstr "Utiliser une couleur personnalisée"
 
 msgid "Identity"
 msgstr "Identité"

@@ -30,7 +30,7 @@ use Glpi\Plugin\Hooks;
 use GlpiPlugin\Pimpmyglpi\Runtime;
 
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
-define('PLUGIN_PIMPMYGLPI_VERSION', '1.1.0');
+define('PLUGIN_PIMPMYGLPI_VERSION', '1.1.1');
 
 // Minimal GLPI version, inclusive: GLPI 11.x
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
@@ -53,6 +53,7 @@ define('PLUGIN_PIMPMYGLPI_MIN_PHP_VERSION', '8.2.0');
  */
 function plugin_init_pimpmyglpi(): void
 {
+    /** @var array<string, array<string, mixed>> $PLUGIN_HOOKS */
     global $PLUGIN_HOOKS;
 
     $PLUGIN_HOOKS[Hooks::CONFIG_PAGE]['pimpmyglpi'] = 'config';
